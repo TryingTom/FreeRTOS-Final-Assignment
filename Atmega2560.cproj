@@ -154,6 +154,15 @@
     <Compile Include="application\application.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="application\Functions.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="application\GlobalVariables.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="application\Tasks.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="devices\adc.c">
       <SubType>compile</SubType>
     </Compile>
