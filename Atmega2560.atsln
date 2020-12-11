@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Atmel Studio Solution File, Format Version 11.00
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Atmega2560", "Atmega2560.cproj", "{24B0FD7C-4847-44DF-A4BA-581603490558}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{24B0FD7C-4847-44DF-A4BA-581603490558}.Debug|AVR.ActiveCfg = Debug|AVR
+		{24B0FD7C-4847-44DF-A4BA-581603490558}.Debug|AVR.Build.0 = Debug|AVR
+		{24B0FD7C-4847-44DF-A4BA-581603490558}.Release|AVR.ActiveCfg = Release|AVR
+		{24B0FD7C-4847-44DF-A4BA-581603490558}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

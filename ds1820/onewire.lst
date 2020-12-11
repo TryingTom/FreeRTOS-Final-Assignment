@@ -1,0 +1,572 @@
+   1               		.file	"onewire.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.global	ow_input_pin_state
+  11               	ow_input_pin_state:
+  12               	/* prologue: function */
+  13               	/* frame size = 0 */
+  14               	/* stack size = 0 */
+  15               	.L__stack_usage = 0
+  16 0000 86B1      		in r24,38-32
+  17 0002 8270      		andi r24,lo8(2)
+  18               	/* epilogue start */
+  19 0004 0895      		ret
+  21               	.global	ow_parasite_enable
+  23               	ow_parasite_enable:
+  24               	/* prologue: function */
+  25               	/* frame size = 0 */
+  26               	/* stack size = 0 */
+  27               	.L__stack_usage = 0
+  28 0006 419A      		sbi 40-32,1
+  29 0008 399A      		sbi 39-32,1
+  30               	/* epilogue start */
+  31 000a 0895      		ret
+  34               	ow_bit_io_intern:
+  35 000c DF93      		push r29
+  36 000e CF93      		push r28
+  37 0010 0F92      		push __tmp_reg__
+  38 0012 CDB7      		in r28,__SP_L__
+  39 0014 DEB7      		in r29,__SP_H__
+  40               	/* prologue: function */
+  41               	/* frame size = 1 */
+  42               	/* stack size = 3 */
+  43               	.L__stack_usage = 3
+  44               	/* #APP */
+  45               	 ;  81 "../ds1820/onewire.c" 1
+  46 0016 F894      		cli
+  47               	 ;  0 "" 2
+  48               	/* #NOAPP */
+  49 0018 399A      		sbi 39-32,1
+  50 001a 9AE0      		 ldi r25,lo8(10)
+  51 001c 9A95      	    1:dec r25
+  52 001e 01F4      	    brne 1b
+  53 0020 00C0      		rjmp .
+  54 0022 8111      		cpse r24,__zero_reg__
+  55 0024 3998      		cbi 39-32,1
+  56               	.L4:
+  57 0026 E5E4      		 ldi r30,lo8(69)
+  58 0028 EA95      	    1:dec r30
+  59 002a 01F4      	    brne 1b
+  60 002c 0000      		nop
+  61 002e 319B      		sbis 38-32,1
+  62 0030 80E0      		ldi r24,lo8(0)
+  63               	.L5:
+  64 0032 F5EE      		 ldi r31,lo8(-27)
+  65 0034 FA95      	    1:dec r31
+  66 0036 01F4      	    brne 1b
+  67 0038 0000      		nop
+  68 003a 3998      		cbi 39-32,1
+  69 003c 6623      		tst r22
+  70 003e 01F0      		breq .L6
+  71 0040 8983      		std Y+1,r24
+  72 0042 0E94 0000 		call ow_parasite_enable
+  73 0046 8981      		ldd r24,Y+1
+  74               	.L6:
+  75 0048 95E3      		 ldi r25,lo8(53)
+  76 004a 9A95      	    1:dec r25
+  77 004c 01F4      	    brne 1b
+  78 004e 0000      		nop
+  79               	/* #APP */
+  80               	 ;  110 "../ds1820/onewire.c" 1
+  81 0050 7894      		sei
+  82               	 ;  0 "" 2
+  83               	/* epilogue start */
+  84               	/* #NOAPP */
+  85 0052 0F90      		pop __tmp_reg__
+  86 0054 CF91      		pop r28
+  87 0056 DF91      		pop r29
+  88 0058 0895      		ret
+  90               	.global	ow_parasite_disable
+  92               	ow_parasite_disable:
+  93               	/* prologue: function */
+  94               	/* frame size = 0 */
+  95               	/* stack size = 0 */
+  96               	.L__stack_usage = 0
+  97 005a 3998      		cbi 39-32,1
+  98               	/* epilogue start */
+  99 005c 0895      		ret
+ 101               	.global	ow_reset
+ 103               	ow_reset:
+ 104               	/* prologue: function */
+ 105               	/* frame size = 0 */
+ 106               	/* stack size = 0 */
+ 107               	.L__stack_usage = 0
+ 108 005e 4198      		cbi 40-32,1
+ 109 0060 399A      		sbi 39-32,1
+ 110 0062 8FE7      		 ldi r24,lo8(1919)
+ 111 0064 97E0      	    ldi r25,hi8(1919)
+ 112 0066 0197      	    1:sbiw r24,1
+ 113 0068 01F4      	    brne 1b
+ 114 006a 00C0      		rjmp .
+ 115 006c 0000      		nop
+ 116               	/* #APP */
+ 117               	 ;  51 "../ds1820/onewire.c" 1
+ 118 006e F894      		cli
+ 119               	 ;  0 "" 2
+ 120               	/* #NOAPP */
+ 121 0070 3998      		cbi 39-32,1
+ 122 0072 EFEF      		 ldi r30,lo8(255)
+ 123 0074 F0E0      	    ldi r31,hi8(255)
+ 124 0076 3197      	    1:sbiw r30,1
+ 125 0078 01F4      	    brne 1b
+ 126 007a 00C0      		rjmp .
+ 127 007c 0000      		nop
+ 128 007e 86B1      		in r24,38-32
+ 129 0080 EFE7      		 ldi r30,lo8(1663)
+ 130 0082 F6E0      	    ldi r31,hi8(1663)
+ 131 0084 3197      	    1:sbiw r30,1
+ 132 0086 01F4      	    brne 1b
+ 133 0088 00C0      		rjmp .
+ 134 008a 0000      		nop
+ 135 008c 319B      		sbis 38-32,1
+ 136 008e 00C0      		rjmp .L11
+ 137 0090 8270      		andi r24,lo8(2)
+ 138 0092 00C0      		rjmp .L10
+ 139               	.L11:
+ 140 0094 81E0      		ldi r24,lo8(1)
+ 141               	.L10:
+ 142               	/* #APP */
+ 143               	 ;  67 "../ds1820/onewire.c" 1
+ 144 0096 7894      		sei
+ 145               	 ;  0 "" 2
+ 146               	/* epilogue start */
+ 147               	/* #NOAPP */
+ 148 0098 0895      		ret
+ 150               	.global	ow_bit_io
+ 152               	ow_bit_io:
+ 153               	/* prologue: function */
+ 154               	/* frame size = 0 */
+ 155               	/* stack size = 0 */
+ 156               	.L__stack_usage = 0
+ 157 009a 8170      		andi r24,lo8(1)
+ 158 009c 60E0      		ldi r22,lo8(0)
+ 159 009e 0E94 0000 		call ow_bit_io_intern
+ 160               	/* epilogue start */
+ 161 00a2 0895      		ret
+ 163               	.global	ow_byte_wr
+ 165               	ow_byte_wr:
+ 166 00a4 0F93      		push r16
+ 167 00a6 1F93      		push r17
+ 168               	/* prologue: function */
+ 169               	/* frame size = 0 */
+ 170               	/* stack size = 2 */
+ 171               	.L__stack_usage = 2
+ 172 00a8 182F      		mov r17,r24
+ 173 00aa 08E0      		ldi r16,lo8(8)
+ 174               	.L15:
+ 175 00ac 812F      		mov r24,r17
+ 176 00ae 8170      		andi r24,lo8(1)
+ 177 00b0 0E94 0000 		call ow_bit_io
+ 178 00b4 1695      		lsr r17
+ 179 00b6 8111      		cpse r24,__zero_reg__
+ 180 00b8 1068      		ori r17,lo8(-128)
+ 181               	.L14:
+ 182 00ba 0150      		subi r16,lo8(-(-1))
+ 183 00bc 01F4      		brne .L15
+ 184 00be 812F      		mov r24,r17
+ 185               	/* epilogue start */
+ 186 00c0 1F91      		pop r17
+ 187 00c2 0F91      		pop r16
+ 188 00c4 0895      		ret
+ 190               	.global	ow_byte_wr_with_parasite_enable
+ 192               	ow_byte_wr_with_parasite_enable:
+ 193 00c6 0F93      		push r16
+ 194 00c8 1F93      		push r17
+ 195               	/* prologue: function */
+ 196               	/* frame size = 0 */
+ 197               	/* stack size = 2 */
+ 198               	.L__stack_usage = 2
+ 199 00ca 182F      		mov r17,r24
+ 200 00cc 08E0      		ldi r16,lo8(8)
+ 201               	.L21:
+ 202 00ce 812F      		mov r24,r17
+ 203 00d0 8170      		andi r24,lo8(1)
+ 204 00d2 0130      		cpi r16,lo8(1)
+ 205 00d4 01F0      		breq .L18
+ 206 00d6 60E0      		ldi r22,lo8(0)
+ 207 00d8 00C0      		rjmp .L23
+ 208               	.L18:
+ 209 00da 61E0      		ldi r22,lo8(1)
+ 210               	.L23:
+ 211 00dc 0E94 0000 		call ow_bit_io_intern
+ 212 00e0 1695      		lsr r17
+ 213 00e2 8111      		cpse r24,__zero_reg__
+ 214 00e4 1068      		ori r17,lo8(-128)
+ 215               	.L20:
+ 216 00e6 0150      		subi r16,lo8(-(-1))
+ 217 00e8 01F4      		brne .L21
+ 218 00ea 812F      		mov r24,r17
+ 219               	/* epilogue start */
+ 220 00ec 1F91      		pop r17
+ 221 00ee 0F91      		pop r16
+ 222 00f0 0895      		ret
+ 225               	ow_command_intern:
+ 226 00f2 FF92      		push r15
+ 227 00f4 0F93      		push r16
+ 228 00f6 1F93      		push r17
+ 229 00f8 CF93      		push r28
+ 230 00fa DF93      		push r29
+ 231               	/* prologue: function */
+ 232               	/* frame size = 0 */
+ 233               	/* stack size = 5 */
+ 234               	.L__stack_usage = 5
+ 235 00fc 182F      		mov r17,r24
+ 236 00fe EB01      		movw r28,r22
+ 237 0100 F42E      		mov r15,r20
+ 238 0102 0E94 0000 		call ow_reset
+ 239 0106 2097      		sbiw r28,0
+ 240 0108 01F0      		breq .L25
+ 241 010a 85E5      		ldi r24,lo8(85)
+ 242 010c 0E94 0000 		call ow_byte_wr
+ 243 0110 08E0      		ldi r16,lo8(8)
+ 244               	.L26:
+ 245 0112 8991      		ld r24,Y+
+ 246 0114 0E94 0000 		call ow_byte_wr
+ 247 0118 0150      		subi r16,lo8(-(-1))
+ 248 011a 01F4      		brne .L26
+ 249 011c 00C0      		rjmp .L27
+ 250               	.L25:
+ 251 011e 8CEC      		ldi r24,lo8(-52)
+ 252 0120 0E94 0000 		call ow_byte_wr
+ 253               	.L27:
+ 254 0124 FF20      		tst r15
+ 255 0126 01F0      		breq .L28
+ 256 0128 812F      		mov r24,r17
+ 257 012a 0E94 0000 		call ow_byte_wr_with_parasite_enable
+ 258 012e 00C0      		rjmp .L24
+ 259               	.L28:
+ 260 0130 812F      		mov r24,r17
+ 261 0132 0E94 0000 		call ow_byte_wr
+ 262               	.L24:
+ 263               	/* epilogue start */
+ 264 0136 DF91      		pop r29
+ 265 0138 CF91      		pop r28
+ 266 013a 1F91      		pop r17
+ 267 013c 0F91      		pop r16
+ 268 013e FF90      		pop r15
+ 269 0140 0895      		ret
+ 271               	.global	ow_byte_rd
+ 273               	ow_byte_rd:
+ 274               	/* prologue: function */
+ 275               	/* frame size = 0 */
+ 276               	/* stack size = 0 */
+ 277               	.L__stack_usage = 0
+ 278 0142 8FEF      		ldi r24,lo8(-1)
+ 279 0144 0E94 0000 		call ow_byte_wr
+ 280               	/* epilogue start */
+ 281 0148 0895      		ret
+ 283               	.global	ow_rom_search
+ 285               	ow_rom_search:
+ 286 014a DF92      		push r13
+ 287 014c EF92      		push r14
+ 288 014e FF92      		push r15
+ 289 0150 0F93      		push r16
+ 290 0152 1F93      		push r17
+ 291 0154 CF93      		push r28
+ 292 0156 DF93      		push r29
+ 293               	/* prologue: function */
+ 294               	/* frame size = 0 */
+ 295               	/* stack size = 7 */
+ 296               	.L__stack_usage = 7
+ 297 0158 182F      		mov r17,r24
+ 298 015a EB01      		movw r28,r22
+ 299 015c 0E94 0000 		call ow_reset
+ 300 0160 8823      		tst r24
+ 301 0162 01F4      		brne .L39
+ 302 0164 80EF      		ldi r24,lo8(-16)
+ 303 0166 0E94 0000 		call ow_byte_wr
+ 304 016a EE24      		clr r14
+ 305 016c 00E4      		ldi r16,lo8(64)
+ 306               	.L38:
+ 307 016e 98EF      		ldi r25,lo8(-8)
+ 308 0170 D92E      		mov r13,r25
+ 309 0172 D00E      		add r13,r16
+ 310               	.L37:
+ 311 0174 81E0      		ldi r24,lo8(1)
+ 312 0176 0E94 0000 		call ow_bit_io
+ 313 017a F82E      		mov r15,r24
+ 314 017c 81E0      		ldi r24,lo8(1)
+ 315 017e 0E94 0000 		call ow_bit_io
+ 316 0182 8823      		tst r24
+ 317 0184 01F0      		breq .L34
+ 318 0186 FF20      		tst r15
+ 319 0188 01F0      		breq .L35
+ 320 018a 00C0      		rjmp .L44
+ 321               	.L34:
+ 322 018c FF20      		tst r15
+ 323 018e 01F4      		brne .L35
+ 324 0190 0117      		cp r16,r17
+ 325 0192 00F0      		brlo .L42
+ 326 0194 8881      		ld r24,Y
+ 327 0196 80FF      		sbrs r24,0
+ 328 0198 00C0      		rjmp .L35
+ 329 019a 1017      		cp r17,r16
+ 330 019c 01F0      		breq .L35
+ 331               	.L42:
+ 332 019e E02E      		mov r14,r16
+ 333 01a0 FF24      		clr r15
+ 334 01a2 F394      		inc r15
+ 335               	.L35:
+ 336 01a4 8F2D      		mov r24,r15
+ 337 01a6 0E94 0000 		call ow_bit_io
+ 338 01aa 8881      		ld r24,Y
+ 339 01ac 8695      		lsr r24
+ 340 01ae 8883      		st Y,r24
+ 341 01b0 FF20      		tst r15
+ 342 01b2 01F0      		breq .L36
+ 343 01b4 8068      		ori r24,lo8(-128)
+ 344 01b6 8883      		st Y,r24
+ 345               	.L36:
+ 346 01b8 0150      		subi r16,lo8(-(-1))
+ 347 01ba 0D15      		cp r16,r13
+ 348 01bc 01F4      		brne .L37
+ 349 01be 0023      		tst r16
+ 350 01c0 01F0      		breq .L33
+ 351 01c2 2196      		adiw r28,1
+ 352 01c4 00C0      		rjmp .L38
+ 353               	.L39:
+ 354 01c6 EE24      		clr r14
+ 355 01c8 EA94      		dec r14
+ 356 01ca 00C0      		rjmp .L33
+ 357               	.L44:
+ 358 01cc 8EEF      		ldi r24,lo8(-2)
+ 359 01ce E82E      		mov r14,r24
+ 360               	.L33:
+ 361 01d0 8E2D      		mov r24,r14
+ 362               	/* epilogue start */
+ 363 01d2 DF91      		pop r29
+ 364 01d4 CF91      		pop r28
+ 365 01d6 1F91      		pop r17
+ 366 01d8 0F91      		pop r16
+ 367 01da FF90      		pop r15
+ 368 01dc EF90      		pop r14
+ 369 01de DF90      		pop r13
+ 370 01e0 0895      		ret
+ 372               	.global	ow_command
+ 374               	ow_command:
+ 375               	/* prologue: function */
+ 376               	/* frame size = 0 */
+ 377               	/* stack size = 0 */
+ 378               	.L__stack_usage = 0
+ 379 01e2 40E0      		ldi r20,lo8(0)
+ 380 01e4 0E94 0000 		call ow_command_intern
+ 381               	/* epilogue start */
+ 382 01e8 0895      		ret
+ 384               	.global	ow_command_with_parasite_enable
+ 386               	ow_command_with_parasite_enable:
+ 387               	/* prologue: function */
+ 388               	/* frame size = 0 */
+ 389               	/* stack size = 0 */
+ 390               	.L__stack_usage = 0
+ 391 01ea 41E0      		ldi r20,lo8(1)
+ 392 01ec 0E94 0000 		call ow_command_intern
+ 393               	/* epilogue start */
+ 394 01f0 0895      		ret
+ 396               	.global	search_sensors
+ 398               	search_sensors:
+ 399 01f2 9F92      		push r9
+ 400 01f4 AF92      		push r10
+ 401 01f6 BF92      		push r11
+ 402 01f8 CF92      		push r12
+ 403 01fa DF92      		push r13
+ 404 01fc EF92      		push r14
+ 405 01fe FF92      		push r15
+ 406 0200 0F93      		push r16
+ 407 0202 1F93      		push r17
+ 408 0204 DF93      		push r29
+ 409 0206 CF93      		push r28
+ 410 0208 CDB7      		in r28,__SP_L__
+ 411 020a DEB7      		in r29,__SP_H__
+ 412 020c 2997      		sbiw r28,9
+ 413 020e 0FB6      		in __tmp_reg__,__SREG__
+ 414 0210 F894      		cli
+ 415 0212 DEBF      		out __SP_H__,r29
+ 416 0214 0FBE      		out __SREG__,__tmp_reg__
+ 417 0216 CDBF      		out __SP_L__,r28
+ 418               	/* prologue: function */
+ 419               	/* frame size = 9 */
+ 420               	/* stack size = 20 */
+ 421               	.L__stack_usage = 20
+ 422 0218 8FEF      		 ldi r24,lo8(14399999)
+ 423 021a 99EB      	    ldi r25,hi8(14399999)
+ 424 021c ABED      	    ldi r26,hlo8(14399999)
+ 425 021e 8150      	    1:subi r24,1
+ 426 0220 9040      	    sbci r25,0
+ 427 0222 A040      	    sbci r26,0
+ 428 0224 01F4      	    brne 1b
+ 429 0226 00C0      		rjmp .
+ 430 0228 0000      		nop
+ 431 022a 0E94 0000 		call ow_reset
+ 432 022e 8FEF      		ldi r24,lo8(-1)
+ 433 0230 8983      		std Y+1,r24
+ 434 0232 00E0      		ldi r16,lo8(0)
+ 435 0234 10E0      		ldi r17,hi8(0)
+ 436 0236 42E0      		ldi r20,lo8(2)
+ 437 0238 E42E      		mov r14,r20
+ 438 023a F12C      		mov r15,__zero_reg__
+ 439 023c EC0E      		add r14,r28
+ 440 023e FD1E      		adc r15,r29
+ 441 0240 6E01      		movw r12,r28
+ 442 0242 0894      		sec
+ 443 0244 C11C      		adc r12,__zero_reg__
+ 444 0246 D11C      		adc r13,__zero_reg__
+ 445 0248 3AE0      		ldi r19,lo8(10)
+ 446 024a A32E      		mov r10,r19
+ 447 024c B12C      		mov r11,__zero_reg__
+ 448 024e AC0E      		add r10,r28
+ 449 0250 BD1E      		adc r11,r29
+ 450 0252 00C0      		rjmp .L48
+ 451               	.L51:
+ 452 0254 C601      		movw r24,r12
+ 453 0256 B701      		movw r22,r14
+ 454 0258 0E94 0000 		call DS18X20_find_sensor
+ 455 025c 8981      		ldd r24,Y+1
+ 456 025e 8F3F      		cpi r24,lo8(-1)
+ 457 0260 01F0      		breq .L49
+ 458 0262 D701      		movw r26,r14
+ 459 0264 F801      		movw r30,r16
+ 460 0266 23E0      		ldi r18,3
+ 461 0268 EE0F      	1:	lsl r30
+ 462 026a FF1F      		rol r31
+ 463 026c 2A95      		dec r18
+ 464 026e 01F4      		brne 1b
+ 465 0270 E050      		subi r30,lo8(-(getSensorIDs))
+ 466 0272 F040      		sbci r31,hi8(-(getSensorIDs))
+ 467               	.L50:
+ 468 0274 8D91      		ld r24,X+
+ 469 0276 8193      		st Z+,r24
+ 470 0278 AA15      		cp r26,r10
+ 471 027a BB05      		cpc r27,r11
+ 472 027c 01F4      		brne .L50
+ 473 027e 0F5F      		subi r16,lo8(-(1))
+ 474 0280 1F4F      		sbci r17,hi8(-(1))
+ 475               	.L48:
+ 476 0282 902E      		mov r9,r16
+ 477 0284 8981      		ldd r24,Y+1
+ 478 0286 8823      		tst r24
+ 479 0288 01F0      		breq .L49
+ 480 028a 0830      		cpi r16,8
+ 481 028c 1105      		cpc r17,__zero_reg__
+ 482 028e 01F4      		brne .L51
+ 483               	.L49:
+ 484 0290 892D      		mov r24,r9
+ 485               	/* epilogue start */
+ 486 0292 2996      		adiw r28,9
+ 487 0294 0FB6      		in __tmp_reg__,__SREG__
+ 488 0296 F894      		cli
+ 489 0298 DEBF      		out __SP_H__,r29
+ 490 029a 0FBE      		out __SREG__,__tmp_reg__
+ 491 029c CDBF      		out __SP_L__,r28
+ 492 029e CF91      		pop r28
+ 493 02a0 DF91      		pop r29
+ 494 02a2 1F91      		pop r17
+ 495 02a4 0F91      		pop r16
+ 496 02a6 FF90      		pop r15
+ 497 02a8 EF90      		pop r14
+ 498 02aa DF90      		pop r13
+ 499 02ac CF90      		pop r12
+ 500 02ae BF90      		pop r11
+ 501 02b0 AF90      		pop r10
+ 502 02b2 9F90      		pop r9
+ 503 02b4 0895      		ret
+ 505               	.global	GetSensorCount
+ 507               	GetSensorCount:
+ 508               	/* prologue: function */
+ 509               	/* frame size = 0 */
+ 510               	/* stack size = 0 */
+ 511               	.L__stack_usage = 0
+ 512 02b6 0E94 0000 		call search_sensors
+ 513               	/* epilogue start */
+ 514 02ba 0895      		ret
+ 516               	.global	GetTemperature
+ 518               	GetTemperature:
+ 519 02bc 0F93      		push r16
+ 520 02be 1F93      		push r17
+ 521 02c0 DF93      		push r29
+ 522 02c2 CF93      		push r28
+ 523 02c4 00D0      		rcall .
+ 524 02c6 00D0      		rcall .
+ 525 02c8 CDB7      		in r28,__SP_L__
+ 526 02ca DEB7      		in r29,__SP_H__
+ 527               	/* prologue: function */
+ 528               	/* frame size = 4 */
+ 529               	/* stack size = 8 */
+ 530               	.L__stack_usage = 8
+ 531 02cc 8C01      		movw r16,r24
+ 532 02ce 80E0      		ldi r24,lo8(0)
+ 533 02d0 60E0      		ldi r22,lo8(0)
+ 534 02d2 70E0      		ldi r23,hi8(0)
+ 535 02d4 0E94 0000 		call DS18X20_start_meas
+ 536 02d8 8FEF      		 ldi r24,lo8(2399999)
+ 537 02da 9EE9      	    ldi r25,hi8(2399999)
+ 538 02dc A4E2      	    ldi r26,hlo8(2399999)
+ 539 02de 8150      	    1:subi r24,1
+ 540 02e0 9040      	    sbci r25,0
+ 541 02e2 A040      	    sbci r26,0
+ 542 02e4 01F4      	    brne 1b
+ 543 02e6 00C0      		rjmp .
+ 544 02e8 0000      		nop
+ 545 02ea C801      		movw r24,r16
+ 546 02ec 53E0      		ldi r21,3
+ 547 02ee 880F      	1:	lsl r24
+ 548 02f0 991F      		rol r25
+ 549 02f2 5A95      		dec r21
+ 550 02f4 01F4      		brne 1b
+ 551 02f6 8050      		subi r24,lo8(-(getSensorIDs))
+ 552 02f8 9040      		sbci r25,hi8(-(getSensorIDs))
+ 553 02fa BE01      		movw r22,r28
+ 554 02fc 6F5F      		subi r22,lo8(-(1))
+ 555 02fe 7F4F      		sbci r23,hi8(-(1))
+ 556 0300 0E94 0000 		call DS18X20_read_maxres
+ 557 0304 6981      		ldd r22,Y+1
+ 558 0306 7A81      		ldd r23,Y+2
+ 559 0308 8B81      		ldd r24,Y+3
+ 560 030a 9C81      		ldd r25,Y+4
+ 561               	/* epilogue start */
+ 562 030c 0F90      		pop __tmp_reg__
+ 563 030e 0F90      		pop __tmp_reg__
+ 564 0310 0F90      		pop __tmp_reg__
+ 565 0312 0F90      		pop __tmp_reg__
+ 566 0314 CF91      		pop r28
+ 567 0316 DF91      		pop r29
+ 568 0318 1F91      		pop r17
+ 569 031a 0F91      		pop r16
+ 570 031c 0895      		ret
+ 572               		.comm getSensorIDs,64,1
+ 573               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:00000000 onewire.c
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:11     .text:00000000 ow_input_pin_state
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:23     .text:00000006 ow_parasite_enable
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:34     .text:0000000c ow_bit_io_intern
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:92     .text:0000005a ow_parasite_disable
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:103    .text:0000005e ow_reset
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:152    .text:0000009a ow_bit_io
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:165    .text:000000a4 ow_byte_wr
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:192    .text:000000c6 ow_byte_wr_with_parasite_enable
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:225    .text:000000f2 ow_command_intern
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:273    .text:00000142 ow_byte_rd
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:285    .text:0000014a ow_rom_search
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:374    .text:000001e2 ow_command
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:386    .text:000001ea ow_command_with_parasite_enable
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:398    .text:000001f2 search_sensors
+                            *COM*:00000040 getSensorIDs
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:507    .text:000002b6 GetSensorCount
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccMcdhzy.s:518    .text:000002bc GetTemperature
+
+UNDEFINED SYMBOLS
+DS18X20_find_sensor
+DS18X20_start_meas
+DS18X20_read_maxres
+__do_clear_bss

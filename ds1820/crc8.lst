@@ -1,0 +1,62 @@
+   1               		.file	"crc8.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.global	crc8
+  11               	crc8:
+  12               	/* prologue: function */
+  13               	/* frame size = 0 */
+  14               	/* stack size = 0 */
+  15               	.L__stack_usage = 0
+  16 0000 282F      		mov r18,r24
+  17 0002 392F      		mov r19,r25
+  18 0004 F901      		movw r30,r18
+  19 0006 20E0      		ldi r18,lo8(0)
+  20 0008 30E0      		ldi r19,hi8(0)
+  21 000a 80E0      		ldi r24,lo8(0)
+  22 000c A8E1      		ldi r26,lo8(24)
+  23 000e 00C0      		rjmp .L2
+  24               	.L7:
+  25 0010 4191      		ld r20,Z+
+  26 0012 98E0      		ldi r25,lo8(8)
+  27               	.L6:
+  28 0014 542F      		mov r21,r20
+  29 0016 5827      		eor r21,r24
+  30 0018 B52F      		mov r27,r21
+  31 001a B170      		andi r27,lo8(1)
+  32 001c 50FD      		sbrc r21,0
+  33 001e 8A27      		eor r24,r26
+  34               	.L3:
+  35 0020 8695      		lsr r24
+  36 0022 B130      		cpi r27,lo8(1)
+  37 0024 01F4      		brne .L4
+  38 0026 8068      		ori r24,lo8(-128)
+  39               	.L4:
+  40 0028 9150      		subi r25,lo8(-(-1))
+  41 002a 01F0      		breq .L5
+  42 002c 4695      		lsr r20
+  43 002e 00C0      		rjmp .L6
+  44               	.L5:
+  45 0030 2F5F      		subi r18,lo8(-(1))
+  46 0032 3F4F      		sbci r19,hi8(-(1))
+  47               	.L2:
+  48 0034 2617      		cp r18,r22
+  49 0036 3707      		cpc r19,r23
+  50 0038 01F4      		brne .L7
+  51               	/* epilogue start */
+  52 003a 0895      		ret
+DEFINED SYMBOLS
+                            *ABS*:00000000 crc8.c
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccIXBEDa.s:11     .text:00000000 crc8
+
+NO UNDEFINED SYMBOLS

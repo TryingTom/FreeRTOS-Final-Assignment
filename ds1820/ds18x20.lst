@@ -1,0 +1,834 @@
+   1               		.file	"ds18x20.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+  10               	read_scratchpad:
+  11 0000 CF92      		push r12
+  12 0002 DF92      		push r13
+  13 0004 FF92      		push r15
+  14 0006 0F93      		push r16
+  15 0008 1F93      		push r17
+  16 000a CF93      		push r28
+  17 000c DF93      		push r29
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 7 */
+  21               	.L__stack_usage = 7
+  22 000e 9C01      		movw r18,r24
+  23 0010 162F      		mov r17,r22
+  24 0012 072F      		mov r16,r23
+  25 0014 F42E      		mov r15,r20
+  26 0016 8EEB      		ldi r24,lo8(-66)
+  27 0018 B901      		movw r22,r18
+  28 001a 0E94 0000 		call ow_command
+  29 001e C801      		movw r24,r16
+  30 0020 C92E      		mov r12,r25
+  31 0022 E601      		movw r28,r12
+  32 0024 6E01      		movw r12,r28
+  33 0026 D82E      		mov r13,r24
+  34 0028 E601      		movw r28,r12
+  35 002a 00C0      		rjmp .L2
+  36               	.L3:
+  37 002c 0E94 0000 		call ow_byte_rd
+  38 0030 8993      		st Y+,r24
+  39               	.L2:
+  40 0032 6E01      		movw r12,r28
+  41 0034 C11A      		sub r12,r17
+  42 0036 CF14      		cp r12,r15
+  43 0038 00F0      		brlo .L3
+  44 003a 812F      		mov r24,r17
+  45 003c 902F      		mov r25,r16
+  46 003e 69E0      		ldi r22,lo8(9)
+  47 0040 70E0      		ldi r23,hi8(9)
+  48 0042 0E94 0000 		call crc8
+  49 0046 8823      		tst r24
+  50 0048 01F0      		breq .L5
+  51 004a 83E0      		ldi r24,lo8(3)
+  52 004c 00C0      		rjmp .L4
+  53               	.L5:
+  54 004e 80E0      		ldi r24,lo8(0)
+  55               	.L4:
+  56               	/* epilogue start */
+  57 0050 DF91      		pop r29
+  58 0052 CF91      		pop r28
+  59 0054 1F91      		pop r17
+  60 0056 0F91      		pop r16
+  61 0058 FF90      		pop r15
+  62 005a DF90      		pop r13
+  63 005c CF90      		pop r12
+  64 005e 0895      		ret
+  66               	.global	DS18X20_find_sensor
+  68               	DS18X20_find_sensor:
+  69 0060 0F93      		push r16
+  70 0062 1F93      		push r17
+  71 0064 CF93      		push r28
+  72 0066 DF93      		push r29
+  73               	/* prologue: function */
+  74               	/* frame size = 0 */
+  75               	/* stack size = 4 */
+  76               	.L__stack_usage = 4
+  77 0068 8C01      		movw r16,r24
+  78 006a EB01      		movw r28,r22
+  79               	.L8:
+  80 006c F801      		movw r30,r16
+  81 006e 8081      		ld r24,Z
+  82 0070 BE01      		movw r22,r28
+  83 0072 0E94 0000 		call ow_rom_search
+  84 0076 F801      		movw r30,r16
+  85 0078 8083      		st Z,r24
+  86 007a 8150      		subi r24,lo8(-(-1))
+  87 007c 8D3F      		cpi r24,lo8(-3)
+  88 007e 00F4      		brsh .L9
+  89 0080 8881      		ld r24,Y
+  90 0082 8832      		cpi r24,lo8(40)
+  91 0084 01F0      		breq .L11
+  92 0086 8031      		cpi r24,lo8(16)
+  93 0088 01F0      		breq .L11
+  94 008a 8232      		cpi r24,lo8(34)
+  95 008c 01F4      		brne .L8
+  96 008e 00C0      		rjmp .L11
+  97               	.L9:
+  98 0090 81E0      		ldi r24,lo8(1)
+  99 0092 00C0      		rjmp .L7
+ 100               	.L11:
+ 101 0094 80E0      		ldi r24,lo8(0)
+ 102               	.L7:
+ 103               	/* epilogue start */
+ 104 0096 DF91      		pop r29
+ 105 0098 CF91      		pop r28
+ 106 009a 1F91      		pop r17
+ 107 009c 0F91      		pop r16
+ 108 009e 0895      		ret
+ 110               	.global	DS18X20_get_power_status
+ 112               	DS18X20_get_power_status:
+ 113 00a0 1F93      		push r17
+ 114 00a2 CF93      		push r28
+ 115 00a4 DF93      		push r29
+ 116               	/* prologue: function */
+ 117               	/* frame size = 0 */
+ 118               	/* stack size = 3 */
+ 119               	.L__stack_usage = 3
+ 120 00a6 EC01      		movw r28,r24
+ 121 00a8 0E94 0000 		call ow_reset
+ 122 00ac 84EB      		ldi r24,lo8(-76)
+ 123 00ae BE01      		movw r22,r28
+ 124 00b0 0E94 0000 		call ow_command
+ 125 00b4 81E0      		ldi r24,lo8(1)
+ 126 00b6 0E94 0000 		call ow_bit_io
+ 127 00ba 182F      		mov r17,r24
+ 128 00bc 0E94 0000 		call ow_reset
+ 129 00c0 81E0      		ldi r24,lo8(1)
+ 130 00c2 1123      		tst r17
+ 131 00c4 01F4      		brne .L14
+ 132 00c6 80E0      		ldi r24,lo8(0)
+ 133               	.L14:
+ 134               	/* epilogue start */
+ 135 00c8 DF91      		pop r29
+ 136 00ca CF91      		pop r28
+ 137 00cc 1F91      		pop r17
+ 138 00ce 0895      		ret
+ 140               		.data
+ 141               	.LC0:
+ 142 0000 4453 3138 		.string	"DS18X20_start_meas: Short Circuit!\r"
+ 142      5832 305F 
+ 142      7374 6172 
+ 142      745F 6D65 
+ 142      6173 3A20 
+ 143               		.text
+ 144               	.global	DS18X20_start_meas
+ 146               	DS18X20_start_meas:
+ 147 00d0 1F93      		push r17
+ 148 00d2 DF93      		push r29
+ 149 00d4 CF93      		push r28
+ 150 00d6 00D0      		rcall .
+ 151 00d8 CDB7      		in r28,__SP_L__
+ 152 00da DEB7      		in r29,__SP_H__
+ 153               	/* prologue: function */
+ 154               	/* frame size = 2 */
+ 155               	/* stack size = 5 */
+ 156               	.L__stack_usage = 5
+ 157 00dc 182F      		mov r17,r24
+ 158 00de 6983      		std Y+1,r22
+ 159 00e0 7A83      		std Y+2,r23
+ 160 00e2 0E94 0000 		call ow_reset
+ 161 00e6 0E94 0000 		call ow_input_pin_state
+ 162 00ea 6981      		ldd r22,Y+1
+ 163 00ec 7A81      		ldd r23,Y+2
+ 164 00ee 8823      		tst r24
+ 165 00f0 01F0      		breq .L16
+ 166 00f2 1130      		cpi r17,lo8(1)
+ 167 00f4 01F0      		breq .L17
+ 168 00f6 84E4      		ldi r24,lo8(68)
+ 169 00f8 0E94 0000 		call ow_command_with_parasite_enable
+ 170 00fc 00C0      		rjmp .L19
+ 171               	.L17:
+ 172 00fe 84E4      		ldi r24,lo8(68)
+ 173 0100 0E94 0000 		call ow_command
+ 174               	.L19:
+ 175 0104 80E0      		ldi r24,lo8(0)
+ 176 0106 00C0      		rjmp .L18
+ 177               	.L16:
+ 178 0108 00D0      		rcall .
+ 179 010a 80E0      		ldi r24,lo8(.LC0)
+ 180 010c 90E0      		ldi r25,hi8(.LC0)
+ 181 010e EDB7      		in r30,__SP_L__
+ 182 0110 FEB7      		in r31,__SP_H__
+ 183 0112 9283      		std Z+2,r25
+ 184 0114 8183      		std Z+1,r24
+ 185 0116 0E94 0000 		call printf
+ 186 011a 0F90      		pop __tmp_reg__
+ 187 011c 0F90      		pop __tmp_reg__
+ 188 011e 82E0      		ldi r24,lo8(2)
+ 189               	.L18:
+ 190               	/* epilogue start */
+ 191 0120 0F90      		pop __tmp_reg__
+ 192 0122 0F90      		pop __tmp_reg__
+ 193 0124 CF91      		pop r28
+ 194 0126 DF91      		pop r29
+ 195 0128 1F91      		pop r17
+ 196 012a 0895      		ret
+ 198               	.global	DS18X20_conversion_in_progress
+ 200               	DS18X20_conversion_in_progress:
+ 201               	/* prologue: function */
+ 202               	/* frame size = 0 */
+ 203               	/* stack size = 0 */
+ 204               	.L__stack_usage = 0
+ 205 012c 81E0      		ldi r24,lo8(1)
+ 206 012e 0E94 0000 		call ow_bit_io
+ 207 0132 91E0      		ldi r25,lo8(1)
+ 208 0134 8111      		cpse r24,__zero_reg__
+ 209 0136 90E0      		ldi r25,lo8(0)
+ 210               	.L21:
+ 211 0138 892F      		mov r24,r25
+ 212               	/* epilogue start */
+ 213 013a 0895      		ret
+ 215               	.global	DS18X20_read_maxres
+ 217               	DS18X20_read_maxres:
+ 218 013c AF92      		push r10
+ 219 013e BF92      		push r11
+ 220 0140 CF92      		push r12
+ 221 0142 DF92      		push r13
+ 222 0144 FF92      		push r15
+ 223 0146 0F93      		push r16
+ 224 0148 1F93      		push r17
+ 225 014a DF93      		push r29
+ 226 014c CF93      		push r28
+ 227 014e CDB7      		in r28,__SP_L__
+ 228 0150 DEB7      		in r29,__SP_H__
+ 229 0152 2997      		sbiw r28,9
+ 230 0154 0FB6      		in __tmp_reg__,__SREG__
+ 231 0156 F894      		cli
+ 232 0158 DEBF      		out __SP_H__,r29
+ 233 015a 0FBE      		out __SREG__,__tmp_reg__
+ 234 015c CDBF      		out __SP_L__,r28
+ 235               	/* prologue: function */
+ 236               	/* frame size = 9 */
+ 237               	/* stack size = 18 */
+ 238               	.L__stack_usage = 18
+ 239 015e 6C01      		movw r12,r24
+ 240 0160 5B01      		movw r10,r22
+ 241 0162 0E94 0000 		call ow_reset
+ 242 0166 C601      		movw r24,r12
+ 243 0168 BE01      		movw r22,r28
+ 244 016a 6F5F      		subi r22,lo8(-(1))
+ 245 016c 7F4F      		sbci r23,hi8(-(1))
+ 246 016e 49E0      		ldi r20,lo8(9)
+ 247 0170 0E94 0000 		call read_scratchpad
+ 248 0174 F82E      		mov r15,r24
+ 249 0176 8823      		tst r24
+ 250 0178 01F0      		breq .+2
+ 251 017a 00C0      		rjmp .L23
+ 252 017c 9A81      		ldd r25,Y+2
+ 253 017e 80E0      		ldi r24,lo8(0)
+ 254 0180 0981      		ldd r16,Y+1
+ 255 0182 10E0      		ldi r17,lo8(0)
+ 256 0184 082B      		or r16,r24
+ 257 0186 192B      		or r17,r25
+ 258 0188 F601      		movw r30,r12
+ 259 018a 8081      		ld r24,Z
+ 260 018c 8031      		cpi r24,lo8(16)
+ 261 018e 01F4      		brne .L24
+ 262 0190 C801      		movw r24,r16
+ 263 0192 8E7F      		andi r24,lo8(-2)
+ 264 0194 23E0      		ldi r18,3
+ 265 0196 880F      	1:	lsl r24
+ 266 0198 991F      		rol r25
+ 267 019a 2A95      		dec r18
+ 268 019c 01F4      		brne 1b
+ 269 019e 2F81      		ldd r18,Y+7
+ 270 01a0 0CE0      		ldi r16,lo8(12)
+ 271 01a2 10E0      		ldi r17,hi8(12)
+ 272 01a4 021B      		sub r16,r18
+ 273 01a6 1109      		sbc r17,__zero_reg__
+ 274 01a8 080F      		add r16,r24
+ 275 01aa 191F      		adc r17,r25
+ 276               	.L24:
+ 277 01ac 17FF      		sbrs r17,7
+ 278 01ae 00C0      		rjmp .L27
+ 279 01b0 1095      		com r17
+ 280 01b2 0195      		neg r16
+ 281 01b4 1F4F      		sbci r17,lo8(-1)
+ 282 01b6 CC24      		clr r12
+ 283 01b8 C394      		inc r12
+ 284 01ba 00C0      		rjmp .L25
+ 285               	.L27:
+ 286 01bc CC24      		clr r12
+ 287               	.L25:
+ 288 01be B801      		movw r22,r16
+ 289 01c0 84E0      		ldi r24,4
+ 290 01c2 7695      	1:	lsr r23
+ 291 01c4 6795      		ror r22
+ 292 01c6 8A95      		dec r24
+ 293 01c8 01F4      		brne 1b
+ 294 01ca 80E0      		ldi r24,lo8(0)
+ 295 01cc 90E0      		ldi r25,hi8(0)
+ 296 01ce 20E1      		ldi r18,lo8(10000)
+ 297 01d0 37E2      		ldi r19,hi8(10000)
+ 298 01d2 40E0      		ldi r20,hlo8(10000)
+ 299 01d4 50E0      		ldi r21,hhi8(10000)
+ 300 01d6 0E94 0000 		call __mulsi3
+ 301 01da 0F70      		andi r16,lo8(15)
+ 302 01dc 1070      		andi r17,hi8(15)
+ 303 01de 41E7      		ldi r20,lo8(625)
+ 304 01e0 52E0      		ldi r21,hi8(625)
+ 305 01e2 049F      		mul r16,r20
+ 306 01e4 9001      		movw r18,r0
+ 307 01e6 059F      		mul r16,r21
+ 308 01e8 300D      		add r19,r0
+ 309 01ea 149F      		mul r17,r20
+ 310 01ec 300D      		add r19,r0
+ 311 01ee 1124      		clr r1
+ 312 01f0 40E0      		ldi r20,lo8(0)
+ 313 01f2 50E0      		ldi r21,hi8(0)
+ 314 01f4 260F      		add r18,r22
+ 315 01f6 371F      		adc r19,r23
+ 316 01f8 481F      		adc r20,r24
+ 317 01fa 591F      		adc r21,r25
+ 318 01fc CC20      		tst r12
+ 319 01fe 01F0      		breq .L26
+ 320 0200 5095      		com r21
+ 321 0202 4095      		com r20
+ 322 0204 3095      		com r19
+ 323 0206 2195      		neg r18
+ 324 0208 3F4F      		sbci r19,lo8(-1)
+ 325 020a 4F4F      		sbci r20,lo8(-1)
+ 326 020c 5F4F      		sbci r21,lo8(-1)
+ 327               	.L26:
+ 328 020e F501      		movw r30,r10
+ 329 0210 2083      		st Z,r18
+ 330 0212 3183      		std Z+1,r19
+ 331 0214 4283      		std Z+2,r20
+ 332 0216 5383      		std Z+3,r21
+ 333               	.L23:
+ 334 0218 8F2D      		mov r24,r15
+ 335               	/* epilogue start */
+ 336 021a 2996      		adiw r28,9
+ 337 021c 0FB6      		in __tmp_reg__,__SREG__
+ 338 021e F894      		cli
+ 339 0220 DEBF      		out __SP_H__,r29
+ 340 0222 0FBE      		out __SREG__,__tmp_reg__
+ 341 0224 CDBF      		out __SP_L__,r28
+ 342 0226 CF91      		pop r28
+ 343 0228 DF91      		pop r29
+ 344 022a 1F91      		pop r17
+ 345 022c 0F91      		pop r16
+ 346 022e FF90      		pop r15
+ 347 0230 DF90      		pop r13
+ 348 0232 CF90      		pop r12
+ 349 0234 BF90      		pop r11
+ 350 0236 AF90      		pop r10
+ 351 0238 0895      		ret
+ 353               	.global	DS18X20_format_from_maxres
+ 355               	DS18X20_format_from_maxres:
+ 356 023a 6F92      		push r6
+ 357 023c 7F92      		push r7
+ 358 023e 8F92      		push r8
+ 359 0240 9F92      		push r9
+ 360 0242 BF92      		push r11
+ 361 0244 CF92      		push r12
+ 362 0246 DF92      		push r13
+ 363 0248 EF92      		push r14
+ 364 024a FF92      		push r15
+ 365 024c 0F93      		push r16
+ 366 024e 1F93      		push r17
+ 367 0250 DF93      		push r29
+ 368 0252 CF93      		push r28
+ 369 0254 CDB7      		in r28,__SP_L__
+ 370 0256 DEB7      		in r29,__SP_H__
+ 371 0258 6A97      		sbiw r28,26
+ 372 025a 0FB6      		in __tmp_reg__,__SREG__
+ 373 025c F894      		cli
+ 374 025e DEBF      		out __SP_H__,r29
+ 375 0260 0FBE      		out __SREG__,__tmp_reg__
+ 376 0262 CDBF      		out __SP_L__,r28
+ 377               	/* prologue: function */
+ 378               	/* frame size = 26 */
+ 379               	/* stack size = 39 */
+ 380               	.L__stack_usage = 39
+ 381 0264 8A01      		movw r16,r20
+ 382 0266 613C      		cpi r22,lo8(-999999)
+ 383 0268 2DEB      		ldi r18,hi8(-999999)
+ 384 026a 7207      		cpc r23,r18
+ 385 026c 20EF      		ldi r18,hlo8(-999999)
+ 386 026e 8207      		cpc r24,r18
+ 387 0270 2FEF      		ldi r18,hhi8(-999999)
+ 388 0272 9207      		cpc r25,r18
+ 389 0274 04F4      		brge .+2
+ 390 0276 00C0      		rjmp .L39
+ 391 0278 6038      		cpi r22,lo8(10000000)
+ 392 027a E6E9      		ldi r30,hi8(10000000)
+ 393 027c 7E07      		cpc r23,r30
+ 394 027e E8E9      		ldi r30,hlo8(10000000)
+ 395 0280 8E07      		cpc r24,r30
+ 396 0282 E0E0      		ldi r30,hhi8(10000000)
+ 397 0284 9E07      		cpc r25,r30
+ 398 0286 04F0      		brlt .+2
+ 399 0288 00C0      		rjmp .L39
+ 400 028a 97FF      		sbrs r25,7
+ 401 028c 00C0      		rjmp .L40
+ 402 028e 9095      		com r25
+ 403 0290 8095      		com r24
+ 404 0292 7095      		com r23
+ 405 0294 6195      		neg r22
+ 406 0296 7F4F      		sbci r23,lo8(-1)
+ 407 0298 8F4F      		sbci r24,lo8(-1)
+ 408 029a 9F4F      		sbci r25,lo8(-1)
+ 409 029c BB24      		clr r11
+ 410 029e B394      		inc r11
+ 411 02a0 00C0      		rjmp .L30
+ 412               	.L40:
+ 413 02a2 BB24      		clr r11
+ 414               	.L30:
+ 415 02a4 49E0      		ldi r20,lo8(9)
+ 416 02a6 C42E      		mov r12,r20
+ 417 02a8 D12C      		mov r13,__zero_reg__
+ 418 02aa CC0E      		add r12,r28
+ 419 02ac DD1E      		adc r13,r29
+ 420 02ae 7601      		movw r14,r12
+ 421 02b0 4E01      		movw r8,r28
+ 422 02b2 0894      		sec
+ 423 02b4 811C      		adc r8,__zero_reg__
+ 424 02b6 911C      		adc r9,__zero_reg__
+ 425 02b8 33E1      		ldi r19,lo8(19)
+ 426 02ba 632E      		mov r6,r19
+ 427 02bc 712C      		mov r7,__zero_reg__
+ 428 02be 6C0E      		add r6,r28
+ 429 02c0 7D1E      		adc r7,r29
+ 430               	.L32:
+ 431 02c2 2AE0      		ldi r18,lo8(10)
+ 432 02c4 30E0      		ldi r19,hi8(10)
+ 433 02c6 40E0      		ldi r20,hlo8(10)
+ 434 02c8 50E0      		ldi r21,hhi8(10)
+ 435 02ca 0E94 0000 		call __divmodsi4
+ 436 02ce 2B8B      		std Y+19,r18
+ 437 02d0 3C8B      		std Y+20,r19
+ 438 02d2 4D8B      		std Y+21,r20
+ 439 02d4 5E8B      		std Y+22,r21
+ 440 02d6 6F8B      		std Y+23,r22
+ 441 02d8 788F      		std Y+24,r23
+ 442 02da 898F      		std Y+25,r24
+ 443 02dc 9A8F      		std Y+26,r25
+ 444 02de D401      		movw r26,r8
+ 445 02e0 F301      		movw r30,r6
+ 446 02e2 88E0      		ldi r24,lo8(8)
+ 447               	.L31:
+ 448 02e4 0190      		ld r0,Z+
+ 449 02e6 0D92      		st X+,r0
+ 450 02e8 8150      		subi r24,lo8(-(-1))
+ 451 02ea 01F4      		brne .L31
+ 452 02ec 6981      		ldd r22,Y+1
+ 453 02ee 7A81      		ldd r23,Y+2
+ 454 02f0 8B81      		ldd r24,Y+3
+ 455 02f2 9C81      		ldd r25,Y+4
+ 456 02f4 2D81      		ldd r18,Y+5
+ 457 02f6 205D      		subi r18,lo8(-(48))
+ 458 02f8 F701      		movw r30,r14
+ 459 02fa 2193      		st Z+,r18
+ 460 02fc 7F01      		movw r14,r30
+ 461 02fe 4E2F      		mov r20,r30
+ 462 0300 4C19      		sub r20,r12
+ 463 0302 1616      		cp __zero_reg__,r22
+ 464 0304 1706      		cpc __zero_reg__,r23
+ 465 0306 1806      		cpc __zero_reg__,r24
+ 466 0308 1906      		cpc __zero_reg__,r25
+ 467 030a 04F0      		brlt .L32
+ 468 030c 9E01      		movw r18,r28
+ 469 030e 275F      		subi r18,lo8(-(9))
+ 470 0310 3F4F      		sbci r19,hi8(-(9))
+ 471 0312 842F      		mov r24,r20
+ 472 0314 9927      		clr r25
+ 473 0316 87FD      		sbrc r24,7
+ 474 0318 9095      		com r25
+ 475 031a BB20      		tst r11
+ 476 031c 01F0      		breq .L33
+ 477 031e 820F      		add r24,r18
+ 478 0320 931F      		adc r25,r19
+ 479 0322 2DE2      		ldi r18,lo8(45)
+ 480               	.L46:
+ 481 0324 FC01      		movw r30,r24
+ 482 0326 2083      		st Z,r18
+ 483 0328 20E0      		ldi r18,lo8(0)
+ 484 032a CE01      		movw r24,r28
+ 485 032c 0996      		adiw r24,9
+ 486 032e 3EE2      		ldi r19,lo8(46)
+ 487 0330 00C0      		rjmp .L45
+ 488               	.L33:
+ 489 0332 820F      		add r24,r18
+ 490 0334 931F      		adc r25,r19
+ 491 0336 2BE2      		ldi r18,lo8(43)
+ 492 0338 00C0      		rjmp .L46
+ 493               	.L45:
+ 494 033a F801      		movw r30,r16
+ 495 033c E20F      		add r30,r18
+ 496 033e F11D      		adc r31,__zero_reg__
+ 497 0340 DC01      		movw r26,r24
+ 498 0342 A40F      		add r26,r20
+ 499 0344 B11D      		adc r27,__zero_reg__
+ 500 0346 5C91      		ld r21,X
+ 501 0348 5083      		st Z,r21
+ 502 034a 2F5F      		subi r18,lo8(-(1))
+ 503 034c 4150      		subi r20,lo8(-(-1))
+ 504 034e 4330      		cpi r20,lo8(3)
+ 505 0350 01F4      		brne .L36
+ 506 0352 F801      		movw r30,r16
+ 507 0354 E20F      		add r30,r18
+ 508 0356 F11D      		adc r31,__zero_reg__
+ 509 0358 3083      		st Z,r19
+ 510 035a 2F5F      		subi r18,lo8(-(1))
+ 511 035c 00C0      		rjmp .L45
+ 512               	.L36:
+ 513 035e 47FF      		sbrs r20,7
+ 514 0360 00C0      		rjmp .L45
+ 515 0362 F801      		movw r30,r16
+ 516 0364 E20F      		add r30,r18
+ 517 0366 F11D      		adc r31,__zero_reg__
+ 518 0368 1082      		st Z,__zero_reg__
+ 519 036a 80E0      		ldi r24,lo8(0)
+ 520 036c 00C0      		rjmp .L29
+ 521               	.L39:
+ 522 036e 81E0      		ldi r24,lo8(1)
+ 523               	.L29:
+ 524               	/* epilogue start */
+ 525 0370 6A96      		adiw r28,26
+ 526 0372 0FB6      		in __tmp_reg__,__SREG__
+ 527 0374 F894      		cli
+ 528 0376 DEBF      		out __SP_H__,r29
+ 529 0378 0FBE      		out __SREG__,__tmp_reg__
+ 530 037a CDBF      		out __SP_L__,r28
+ 531 037c CF91      		pop r28
+ 532 037e DF91      		pop r29
+ 533 0380 1F91      		pop r17
+ 534 0382 0F91      		pop r16
+ 535 0384 FF90      		pop r15
+ 536 0386 EF90      		pop r14
+ 537 0388 DF90      		pop r13
+ 538 038a CF90      		pop r12
+ 539 038c BF90      		pop r11
+ 540 038e 9F90      		pop r9
+ 541 0390 8F90      		pop r8
+ 542 0392 7F90      		pop r7
+ 543 0394 6F90      		pop r6
+ 544 0396 0895      		ret
+ 546               		.data
+ 547               	.LC1:
+ 548 0024 4453 3138 		.string	"DS18X20_write_scratchpad: Short Circuit!\r"
+ 548      5832 305F 
+ 548      7772 6974 
+ 548      655F 7363 
+ 548      7261 7463 
+ 549               		.text
+ 550               	.global	DS18X20_write_scratchpad
+ 552               	DS18X20_write_scratchpad:
+ 553 0398 FF92      		push r15
+ 554 039a 0F93      		push r16
+ 555 039c 1F93      		push r17
+ 556 039e CF93      		push r28
+ 557 03a0 DF93      		push r29
+ 558               	/* prologue: function */
+ 559               	/* frame size = 0 */
+ 560               	/* stack size = 5 */
+ 561               	.L__stack_usage = 5
+ 562 03a2 EC01      		movw r28,r24
+ 563 03a4 162F      		mov r17,r22
+ 564 03a6 042F      		mov r16,r20
+ 565 03a8 F22E      		mov r15,r18
+ 566 03aa 0E94 0000 		call ow_reset
+ 567 03ae 0E94 0000 		call ow_input_pin_state
+ 568 03b2 8823      		tst r24
+ 569 03b4 01F0      		breq .L48
+ 570 03b6 8EE4      		ldi r24,lo8(78)
+ 571 03b8 BE01      		movw r22,r28
+ 572 03ba 0E94 0000 		call ow_command
+ 573 03be 812F      		mov r24,r17
+ 574 03c0 0E94 0000 		call ow_byte_wr
+ 575 03c4 802F      		mov r24,r16
+ 576 03c6 0E94 0000 		call ow_byte_wr
+ 577 03ca 8881      		ld r24,Y
+ 578 03cc 8832      		cpi r24,lo8(40)
+ 579 03ce 01F0      		breq .L49
+ 580 03d0 8232      		cpi r24,lo8(34)
+ 581 03d2 01F4      		brne .L51
+ 582               	.L49:
+ 583 03d4 8F2D      		mov r24,r15
+ 584 03d6 0E94 0000 		call ow_byte_wr
+ 585 03da 00C0      		rjmp .L51
+ 586               	.L48:
+ 587 03dc 00D0      		rcall .
+ 588 03de 80E0      		ldi r24,lo8(.LC1)
+ 589 03e0 90E0      		ldi r25,hi8(.LC1)
+ 590 03e2 EDB7      		in r30,__SP_L__
+ 591 03e4 FEB7      		in r31,__SP_H__
+ 592 03e6 9283      		std Z+2,r25
+ 593 03e8 8183      		std Z+1,r24
+ 594 03ea 0E94 0000 		call printf
+ 595 03ee 0F90      		pop __tmp_reg__
+ 596 03f0 0F90      		pop __tmp_reg__
+ 597 03f2 81E0      		ldi r24,lo8(1)
+ 598 03f4 00C0      		rjmp .L50
+ 599               	.L51:
+ 600 03f6 80E0      		ldi r24,lo8(0)
+ 601               	.L50:
+ 602               	/* epilogue start */
+ 603 03f8 DF91      		pop r29
+ 604 03fa CF91      		pop r28
+ 605 03fc 1F91      		pop r17
+ 606 03fe 0F91      		pop r16
+ 607 0400 FF90      		pop r15
+ 608 0402 0895      		ret
+ 610               		.data
+ 611               	.LC2:
+ 612 004e 4453 3138 		.string	"DS18X20_read_scratchpad: Short Circuit!\r"
+ 612      5832 305F 
+ 612      7265 6164 
+ 612      5F73 6372 
+ 612      6174 6368 
+ 613               		.text
+ 614               	.global	DS18X20_read_scratchpad
+ 616               	DS18X20_read_scratchpad:
+ 617 0404 EF92      		push r14
+ 618 0406 FF92      		push r15
+ 619 0408 0F93      		push r16
+ 620 040a 1F93      		push r17
+ 621 040c DF93      		push r29
+ 622 040e CF93      		push r28
+ 623 0410 0F92      		push __tmp_reg__
+ 624 0412 CDB7      		in r28,__SP_L__
+ 625 0414 DEB7      		in r29,__SP_H__
+ 626               	/* prologue: function */
+ 627               	/* frame size = 1 */
+ 628               	/* stack size = 7 */
+ 629               	.L__stack_usage = 7
+ 630 0416 7C01      		movw r14,r24
+ 631 0418 8B01      		movw r16,r22
+ 632 041a 4983      		std Y+1,r20
+ 633 041c 0E94 0000 		call ow_reset
+ 634 0420 0E94 0000 		call ow_input_pin_state
+ 635 0424 4981      		ldd r20,Y+1
+ 636 0426 8823      		tst r24
+ 637 0428 01F0      		breq .L53
+ 638 042a C701      		movw r24,r14
+ 639 042c B801      		movw r22,r16
+ 640 042e 0E94 0000 		call read_scratchpad
+ 641 0432 00C0      		rjmp .L54
+ 642               	.L53:
+ 643 0434 00D0      		rcall .
+ 644 0436 80E0      		ldi r24,lo8(.LC2)
+ 645 0438 90E0      		ldi r25,hi8(.LC2)
+ 646 043a EDB7      		in r30,__SP_L__
+ 647 043c FEB7      		in r31,__SP_H__
+ 648 043e 9283      		std Z+2,r25
+ 649 0440 8183      		std Z+1,r24
+ 650 0442 0E94 0000 		call printf
+ 651 0446 0F90      		pop __tmp_reg__
+ 652 0448 0F90      		pop __tmp_reg__
+ 653 044a 81E0      		ldi r24,lo8(1)
+ 654               	.L54:
+ 655               	/* epilogue start */
+ 656 044c 0F90      		pop __tmp_reg__
+ 657 044e CF91      		pop r28
+ 658 0450 DF91      		pop r29
+ 659 0452 1F91      		pop r17
+ 660 0454 0F91      		pop r16
+ 661 0456 FF90      		pop r15
+ 662 0458 EF90      		pop r14
+ 663 045a 0895      		ret
+ 665               		.data
+ 666               	.LC3:
+ 667 0077 4453 3138 		.string	"DS18X20_copy_scratchpad: Short Circuit!\r"
+ 667      5832 305F 
+ 667      636F 7079 
+ 667      5F73 6372 
+ 667      6174 6368 
+ 668               		.text
+ 669               	.global	DS18X20_scratchpad_to_eeprom
+ 671               	DS18X20_scratchpad_to_eeprom:
+ 672 045c 1F93      		push r17
+ 673 045e DF93      		push r29
+ 674 0460 CF93      		push r28
+ 675 0462 00D0      		rcall .
+ 676 0464 CDB7      		in r28,__SP_L__
+ 677 0466 DEB7      		in r29,__SP_H__
+ 678               	/* prologue: function */
+ 679               	/* frame size = 2 */
+ 680               	/* stack size = 5 */
+ 681               	.L__stack_usage = 5
+ 682 0468 182F      		mov r17,r24
+ 683 046a 6983      		std Y+1,r22
+ 684 046c 7A83      		std Y+2,r23
+ 685 046e 0E94 0000 		call ow_reset
+ 686 0472 0E94 0000 		call ow_input_pin_state
+ 687 0476 6981      		ldd r22,Y+1
+ 688 0478 7A81      		ldd r23,Y+2
+ 689 047a 8823      		tst r24
+ 690 047c 01F0      		breq .L56
+ 691 047e 1130      		cpi r17,lo8(1)
+ 692 0480 01F0      		breq .L57
+ 693 0482 88E4      		ldi r24,lo8(72)
+ 694 0484 0E94 0000 		call ow_command_with_parasite_enable
+ 695 0488 00C0      		rjmp .L58
+ 696               	.L57:
+ 697 048a 88E4      		ldi r24,lo8(72)
+ 698 048c 0E94 0000 		call ow_command
+ 699               	.L58:
+ 700 0490 8FE3      		 ldi r24,lo8(-25537)
+ 701 0492 9CE9      	    ldi r25,hi8(-25537)
+ 702 0494 0197      	    1:sbiw r24,1
+ 703 0496 01F4      	    brne 1b
+ 704 0498 00C0      		rjmp .
+ 705 049a 0000      		nop
+ 706 049c 1130      		cpi r17,lo8(1)
+ 707 049e 01F0      		breq .L60
+ 708 04a0 0E94 0000 		call ow_parasite_disable
+ 709 04a4 00C0      		rjmp .L60
+ 710               	.L56:
+ 711 04a6 00D0      		rcall .
+ 712 04a8 80E0      		ldi r24,lo8(.LC3)
+ 713 04aa 90E0      		ldi r25,hi8(.LC3)
+ 714 04ac EDB7      		in r30,__SP_L__
+ 715 04ae FEB7      		in r31,__SP_H__
+ 716 04b0 9283      		std Z+2,r25
+ 717 04b2 8183      		std Z+1,r24
+ 718 04b4 0E94 0000 		call printf
+ 719 04b8 0F90      		pop __tmp_reg__
+ 720 04ba 0F90      		pop __tmp_reg__
+ 721 04bc 82E0      		ldi r24,lo8(2)
+ 722 04be 00C0      		rjmp .L59
+ 723               	.L60:
+ 724 04c0 80E0      		ldi r24,lo8(0)
+ 725               	.L59:
+ 726               	/* epilogue start */
+ 727 04c2 0F90      		pop __tmp_reg__
+ 728 04c4 0F90      		pop __tmp_reg__
+ 729 04c6 CF91      		pop r28
+ 730 04c8 DF91      		pop r29
+ 731 04ca 1F91      		pop r17
+ 732 04cc 0895      		ret
+ 734               		.data
+ 735               	.LC4:
+ 736 00a0 4453 3138 		.string	"DS18X20_recall_E2: timeout!\r"
+ 736      5832 305F 
+ 736      7265 6361 
+ 736      6C6C 5F45 
+ 736      323A 2074 
+ 737               	.LC5:
+ 738 00bd 4453 3138 		.string	"DS18X20_recall_E2: Short Circuit!\r"
+ 738      5832 305F 
+ 738      7265 6361 
+ 738      6C6C 5F45 
+ 738      323A 2053 
+ 739               		.text
+ 740               	.global	DS18X20_eeprom_to_scratchpad
+ 742               	DS18X20_eeprom_to_scratchpad:
+ 743 04ce 1F93      		push r17
+ 744 04d0 CF93      		push r28
+ 745 04d2 DF93      		push r29
+ 746               	/* prologue: function */
+ 747               	/* frame size = 0 */
+ 748               	/* stack size = 3 */
+ 749               	.L__stack_usage = 3
+ 750 04d4 EC01      		movw r28,r24
+ 751 04d6 0E94 0000 		call ow_reset
+ 752 04da 0E94 0000 		call ow_input_pin_state
+ 753 04de 8823      		tst r24
+ 754 04e0 01F0      		breq .L62
+ 755 04e2 88EB      		ldi r24,lo8(-72)
+ 756 04e4 BE01      		movw r22,r28
+ 757 04e6 0E94 0000 		call ow_command
+ 758 04ea 1FEF      		ldi r17,lo8(-1)
+ 759               	.L64:
+ 760 04ec 1150      		subi r17,lo8(-(-1))
+ 761 04ee 1F3F      		cpi r17,lo8(-1)
+ 762 04f0 01F0      		breq .L63
+ 763 04f2 81E0      		ldi r24,lo8(1)
+ 764 04f4 0E94 0000 		call ow_bit_io
+ 765 04f8 8823      		tst r24
+ 766 04fa 01F0      		breq .L64
+ 767               	.L63:
+ 768 04fc 1123      		tst r17
+ 769 04fe 01F4      		brne .L66
+ 770 0500 00D0      		rcall .
+ 771 0502 80E0      		ldi r24,lo8(.LC4)
+ 772 0504 90E0      		ldi r25,hi8(.LC4)
+ 773 0506 00C0      		rjmp .L68
+ 774               	.L62:
+ 775 0508 00D0      		rcall .
+ 776 050a 80E0      		ldi r24,lo8(.LC5)
+ 777 050c 90E0      		ldi r25,hi8(.LC5)
+ 778               	.L68:
+ 779 050e EDB7      		in r30,__SP_L__
+ 780 0510 FEB7      		in r31,__SP_H__
+ 781 0512 9283      		std Z+2,r25
+ 782 0514 8183      		std Z+1,r24
+ 783 0516 0E94 0000 		call printf
+ 784 051a 0F90      		pop __tmp_reg__
+ 785 051c 0F90      		pop __tmp_reg__
+ 786 051e 81E0      		ldi r24,lo8(1)
+ 787 0520 00C0      		rjmp .L65
+ 788               	.L66:
+ 789 0522 80E0      		ldi r24,lo8(0)
+ 790               	.L65:
+ 791               	/* epilogue start */
+ 792 0524 DF91      		pop r29
+ 793 0526 CF91      		pop r28
+ 794 0528 1F91      		pop r17
+ 795 052a 0895      		ret
+ 797               	.global __do_copy_data
+DEFINED SYMBOLS
+                            *ABS*:00000000 ds18x20.c
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:2      *ABS*:0000003f __SREG__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:3      *ABS*:0000003e __SP_H__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:4      *ABS*:0000003d __SP_L__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:5      *ABS*:00000034 __CCP__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:6      *ABS*:00000000 __tmp_reg__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:7      *ABS*:00000001 __zero_reg__
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:10     .text:00000000 read_scratchpad
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:68     .text:00000060 DS18X20_find_sensor
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:112    .text:000000a0 DS18X20_get_power_status
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:146    .text:000000d0 DS18X20_start_meas
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:200    .text:0000012c DS18X20_conversion_in_progress
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:217    .text:0000013c DS18X20_read_maxres
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:355    .text:0000023a DS18X20_format_from_maxres
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:552    .text:00000398 DS18X20_write_scratchpad
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:616    .text:00000404 DS18X20_read_scratchpad
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:671    .text:0000045c DS18X20_scratchpad_to_eeprom
+C:\DOCUME~1\vmaksima\LOCALS~1\Temp\ccneLedN.s:742    .text:000004ce DS18X20_eeprom_to_scratchpad
+
+UNDEFINED SYMBOLS
+ow_command
+ow_byte_rd
+crc8
+ow_rom_search
+ow_reset
+ow_bit_io
+ow_input_pin_state
+ow_command_with_parasite_enable
+printf
+__mulsi3
+__divmodsi4
+ow_byte_wr
+ow_parasite_disable
+__do_copy_data
