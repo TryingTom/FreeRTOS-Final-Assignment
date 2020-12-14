@@ -63,4 +63,122 @@ void ShowTime(void)
 	lcd_puts(szVariable);
 }
 
+////////////////////////////////////////////////////////////////
+//
+// ShowTimeHoursAndMinutesAndDate will print the hour and minute on the screen, and the date after that
+//
+////////////////////////////////////////////////////////////////
+
+void ShowTimeHoursAndMinutesAndDate(void)
+{
+	char  szVariable[8];  // variable value will be printed here
+
+	//lcd_gotoxy(0,0);
+	// hours
+	//if( intsTime[IDD_HOUR] < 10)
+	//lcd_putc('0');
+	//itoa(intsTime[IDD_HOUR],szVariable,10);
+	//lcd_puts(szVariable);
+	//lcd_putc(':');
+	// minutes
+	if( intsTime[IDD_MINUTES] < 10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_MINUTES],szVariable,10);
+	lcd_puts(szVariable);
+	//lcd_putc(' ');
+	//////////////////////////////////////////////////// delete later on
+	// seconds
+	lcd_putc(':');
+	if( intsTime[IDD_SECONDS] < 10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_SECONDS],szVariable,10);
+	lcd_puts(szVariable);
+	lcd_putc(' ');
+	//////////////////////////////////////////////////// delete later on
+	// day
+	if(intsTime[IDD_DAY]<10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_DAY],szVariable,10);
+	lcd_puts(szVariable);
+	lcd_putc('.');
+	// month
+	if(intsTime[IDD_MONTH]<10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_MONTH],szVariable,10);
+	lcd_puts(szVariable);
+	lcd_putc('.');
+	// year
+	itoa(intsTime[IDD_YEAR],szVariable,10);
+	lcd_puts(szVariable);
+	
+}
+
+void DisplayWrite(char *text)
+{
+	char *pDisplay[] = {text};
+	volatile  char *pChDisplay =0,  // pointer for *pDisplay, shows the current character
+	*pChVariable=0; // pointer which is connected to variable value printing
+	int             i;
+	char            szVariable[8]; // variable value is printed here
+	bool skipVariablePrint = false;
+	
+	xSemaphoreTake( xDisplaySemaphore, portMAX_DELAY ); // Take Semaphore for uninterrupted printing
+	pChDisplay = pDisplay[0];
+	lcd_gotoxy(0,0); // to the beginning of LCD
+	//// the array is printed in this loop
+	while(*pChDisplay != 0)
+	{
+		// if it's variable printing time
+		if( *pChDisplay == '%')
+		{
+			pChDisplay++; // move past %
+			// check the type
+			switch(*pChDisplay)
+			{
+				// int-type whole numbers
+				// variable value is picked from ints-array depending on the index
+				case 'i': pChDisplay++;
+				// index is given in a form of 09, 10,11,..
+				i = (*pChDisplay - '0')*10;
+				pChDisplay++;
+				i +=  (*pChDisplay- '0'); // index to ints-array
+				taskENTER_CRITICAL(); //////////////////////////////////
+				itoa(ints[i],szVariable,10);                        //// // itoa transfers int to string inside the szVariable array
+				taskEXIT_CRITICAL();  //////////////////////////////////
+				// todo: fix the comma problem on the temperature...
+				szVariable[sizeof(szVariable)] = szVariable[sizeof(szVariable)-1];
+				szVariable[sizeof(szVariable)-1] = ',';
+				skipVariablePrint = false;
+				break;
+				
+				case 't':
+				taskENTER_CRITICAL(); //////////////////////////////////
+				ShowTimeHoursAndMinutesAndDate();				////////
+				taskEXIT_CRITICAL();  //////////////////////////////////
+				skipVariablePrint = true;
+				break;
+			}
+			if(!skipVariablePrint)
+			{
+				// the variable is printed
+				pChVariable = szVariable;
+				while(*pChVariable != 0)
+				{
+					lcd_putc(*pChVariable); // print the character
+					pChVariable++;			// next character
+				}
+			}
+		}
+		else if(*pChDisplay == '\n')
+		{
+			lcd_gotoxy(0,1);
+		}
+		else
+		// screen *pChDisplay text
+		lcd_putc(*pChDisplay);	// print the character
+		pChDisplay++;			// next character
+	}
+	xSemaphoreGive( xDisplaySemaphore); // give the semaphore
+}
+
 #endif /* FUNCTIONS_H_ */

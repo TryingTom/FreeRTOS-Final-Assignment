@@ -282,10 +282,7 @@ unsigned char GetSensorCount(void)
 
 long    GetTemperature( unsigned nSensor)
 { long temperature;
-	// ROM mikä sai Arduino IDEllä
-	// hex: 10 AD BE A5 3 8 0 BA
-	//uint8_t id = (16, 173, 190, 165, 56, 11, 160);
-   
+	
    DS18X20_start_meas( DS18X20_POWER_EXTERN, NULL);
 	  
    _delay_ms( DS18B20_TCONV_12BIT );

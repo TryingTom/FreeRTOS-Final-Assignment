@@ -19,10 +19,11 @@ There are following screens implemented:
 There will be also USB connection to another program on the computer, which shows user interface for the different temperatures according to the time.
 
 ## Todo:
-- [ ] Fixing screen texts
+- [x] Fixing screen texts
 - [ ] Implement change time
-- [ ] Implement display date
+- [x] Implement display date
 - [ ] Implement change date
 - [ ] Implement calculate average
+- [ ] Fix buttons so they have less error
 
 - [ ] UI for the the data

@@ -58,6 +58,7 @@ UI for the the data
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 // local devices
 #include "../ds1820/sensor.h"   // functions for the temperature sensor
 #include "..\devices\device.h"  // LCD-panel

@@ -16,6 +16,11 @@ static void vDoMeasurements( void *pvParameters )
 	
 	numberOfSensors = GetSensorCount(); // gets the sensor count that are in the same connection
 
+	// initialize max and minimum numbers; according to the datasheet, they are: -55 C - 125 C
+	// temperature times 10x because it's integer
+	ints[IDD_MAXTEMPERATURE] = -600;
+	ints[IDD_MINTEMPERATURE] = 1300;
+	
 
 	for( ;; )
 	{
@@ -23,8 +28,17 @@ static void vDoMeasurements( void *pvParameters )
 		{
 			value  = (int)(GetTemperature(0)/1000);
 			taskENTER_CRITICAL(); //////////////////////////
-			ints[ IDD_BUTTON ] = value ;                ////
+			ints[ IDD_TEMPERATURE ] = value ;           ////
 			taskEXIT_CRITICAL(); ///////////////////////////
+			
+			if (value >ints[IDD_MAXTEMPERATURE])
+			{
+				ints[IDD_MAXTEMPERATURE] = value;
+			}
+			if (value <ints[IDD_MINTEMPERATURE])
+			{
+				ints[IDD_MINTEMPERATURE] = value;
+			}
 		}
 		vTaskDelay(100);
 	} //task for end
@@ -38,12 +52,6 @@ static void vDoMeasurements( void *pvParameters )
 
 static void vLcdHandler( void *pvParameters )
 {
-
-	char *pDisplay[] = {"VALUE=%i03   \nBUTTON=%i02"};
-	volatile  char *pChDisplay =0,  // pointer for *pDisplay, shows the current character
-	*pChVariable=0; // pointer which is connected to variable value printing
-	int             i;
-	char            szVariable[8]; // variable value is printed here
 	static DISPLAY_MESSAGE message;
 
 	( void ) pvParameters;	/* Just to stop compiler warnings. */
@@ -53,174 +61,41 @@ static void vLcdHandler( void *pvParameters )
 	{
 		xQueueReceive(xDisplay,&message, portMAX_DELAY); // wait until a message is gotten
 		
+		// check if the screen is the same as the last one, to reduce the screen interrupt
+		if (LastScreen != message.idMessage)
+		{
+			// clear screen
+			lcd_clrscr();
+			LastScreen = message.idMessage;
+		}
+		
+		
 		switch( message.idMessage)
 		{
+			// check the what %i01 means in above ints in GlobalVariables.h, %i01 = IDD_LASTKEY
 			case IDM_UPDATE_DISPLAY:
-			xSemaphoreTake( xDisplaySemaphore, portMAX_DELAY ); // Take Semaphore for uninterrupted printing
-			if( message.data == 0 )
-			pChDisplay = pDisplay[0];
-			
-			// initialized with a dummy text
-			// todo: make this according to the assigment
-			*pDisplay = "Update=%i03 C  \nDisplay=%i02";
-			
-			lcd_gotoxy(0,0); // to the beginning of LCD
-			//// the array is printed in this loop
-			while(*pChDisplay != 0)
-			{
-				// if it's variable printing time
-				if( *pChDisplay == '%')
-				{
-					pChDisplay++; // move past %
-					// check the type
-					switch(*pChDisplay)
-					{
-						// int-type whole numbers
-						// variable value is picked from ints-array depending on the index
-						case 'i': pChDisplay++;
-						// index is given in a form of 09, 10,11,..
-						i = (*pChDisplay - '0')*10;
-						pChDisplay++;
-						i +=  (*pChDisplay- '0'); // index to ints-array
-						taskENTER_CRITICAL(); //////////////////////////////////
-						itoa(ints[i],szVariable,10);                        //// // itoa transfers int to string inside the szVariable array
-						taskEXIT_CRITICAL();  //////////////////////////////////
-						szVariable[3] = szVariable[2];
-						szVariable[2] = ',';
-						break;
-					}
-					// the variable is printed
-					pChVariable = szVariable;
-					while(*pChVariable != 0)
-					{
-						lcd_putc(*pChVariable); // print the character
-						pChVariable++;			// next character
-					}
-				}
-				else if(*pChDisplay == '\n')
-				{
-					lcd_gotoxy(0,1);
-				}
-				else
-				// screen *pChDisplay text
-				lcd_putc(*pChDisplay);	// print the character
-				pChDisplay++;			// next character
-			}
-			xSemaphoreGive( xDisplaySemaphore); // give the semaphore
-			break;
-			
-			// others are just copies, for now. 
-			case IDM_DISPLAY_HISTORY:
-			xSemaphoreTake( xDisplaySemaphore, portMAX_DELAY );
-			if( message.data == 0 )
-			pChDisplay = pDisplay[0];
-			*pDisplay = "Display=%i03 C  \nHistory=%i02";
-			
-			// ja vain tämä taski käyttää lcd:tä
-			lcd_gotoxy(0,0); // lcd-näytön alkuun
-			// tulostetaan näyttö tässä silmukassa
-			while(*pChDisplay != 0)
-			{
-				// onko muuttujan tulostuspaikka?
-				if( *pChDisplay == '%')
-				{
-					pChDisplay++; //ohitetaan %-merkki
-					// minkä tyypin dataa?
-					switch(*pChDisplay)
-					{
-						// int-tyypin kokonaislukuja
-						// muuttujan arvo poimitaan ints-taulukosta indeksin määräämästä paikasta
-						case 'i': pChDisplay++;
-						// indeksi annettu muodossa 09, 10,11,..
-						i = (*pChDisplay - '0')*10;
-						pChDisplay++;
-						i +=  (*pChDisplay- '0'); // indeksi ints-taulukkoon
-						taskENTER_CRITICAL(); //////////////////////////////////
-						itoa(ints[i],szVariable,10);                        ////
-						taskEXIT_CRITICAL();  //////////////////////////////////
-						szVariable[3] = szVariable[2];
-						szVariable[2] = ',';
-						break;
-					}
-					// tulostetaan muuttuja
-					pChVariable = szVariable;
-					while(*pChVariable != 0)
-					{
-						lcd_putc(*pChVariable); // merkki näkyviin
-						pChVariable++; // seuraava kirjain
-					}
-				}
-				else if(*pChDisplay == '\n')
-				{
-					lcd_gotoxy(0,1);
-				}
-				else
-				// näytön pohjateksti
-				lcd_putc(*pChDisplay); // merkki näkyviin
-
-				pChDisplay++; // seuraava kirjain
-			}
-			xSemaphoreGive( xDisplaySemaphore); // Vapautetaan semaphori
+			DisplayWrite("Up  =Set Time\nDown=Set Date");
 			break;
 			
 			case IDM_DISPLAY_MINMAX:
-			xSemaphoreTake( xDisplaySemaphore, portMAX_DELAY );
-			if( message.data == 0 )
-			pChDisplay = pDisplay[0];
-			*pDisplay = "Display=%i03 C  \nMinMax=%i02";
+			DisplayWrite("Max: %i03 C\nMin: %i04 C");
+			break;
 			
-			// ja vain tämä taski käyttää lcd:tä
-			lcd_gotoxy(0,0); // lcd-näytön alkuun
-			// tulostetaan näyttö tässä silmukassa
-			while(*pChDisplay != 0)
-			{
-				// onko muuttujan tulostuspaikka?
-				if( *pChDisplay == '%')
-				{
-					pChDisplay++; //ohitetaan %-merkki
-					// minkä tyypin dataa?
-					switch(*pChDisplay)
-					{
-						// int-tyypin kokonaislukuja
-						// muuttujan arvo poimitaan ints-taulukosta indeksin määräämästä paikasta
-						case 'i': pChDisplay++;
-						// indeksi annettu muodossa 09, 10,11,..
-						i = (*pChDisplay - '0')*10;
-						pChDisplay++;
-						i +=  (*pChDisplay- '0'); // indeksi ints-taulukkoon
-						taskENTER_CRITICAL(); //////////////////////////////////
-						itoa(ints[i],szVariable,10);                        ////
-						taskEXIT_CRITICAL();  //////////////////////////////////
-						szVariable[3] = szVariable[2];
-						szVariable[2] = ',';
-						break;
-					}
-					// tulostetaan muuttuja
-					pChVariable = szVariable;
-					while(*pChVariable != 0)
-					{
-						lcd_putc(*pChVariable); // merkki näkyviin
-						pChVariable++; // seuraava kirjain
-					}
-				}
-				else if(*pChDisplay == '\n')
-				{
-					lcd_gotoxy(0,1);
-				}
-				else
-				// näytön pohjateksti
-				lcd_putc(*pChDisplay); // merkki näkyviin
-
-				pChDisplay++; // seuraava kirjain
-			}
-			xSemaphoreGive( xDisplaySemaphore); // Vapautetaan semaphori
+			case IDM_DISPLAY_AVERAGE:
+			DisplayWrite("Average Display");
+			break;
+			
+			case IDM_DISPLAY_UPDATE_DATE:
+			DisplayWrite("Update Date");
+			break;
+			
+			case IDM_DISPLAY_UPDATE_TIME:
+			DisplayWrite("Update Time");
 			break;
 			
 			case IDM_DISPLAY_TIME:
-			xSemaphoreTake( xDisplaySemaphore, portMAX_DELAY );
-			//lcd_clrscr(); // clear screen
-			ShowTime();
-			xSemaphoreGive( xDisplaySemaphore); 
+			// display time, date and temperature
+			DisplayWrite("%t\n%i02 C");
 			break;
 			
 			default:
@@ -241,6 +116,8 @@ static void vKeyPadHandler( void *pvParameters )
 	static unsigned char ch = 0;
 	static DISPLAY_MESSAGE message;
 	
+	message.data = 0; // the display number
+	
 	( void ) pvParameters; /* Just to stop compiler warnings. */
 
 	for( ;; )
@@ -252,35 +129,39 @@ static void vKeyPadHandler( void *pvParameters )
 			xSemaphoreGive( xADC );
 
 		}while (ch == NO_KEY);
+		
+		// reset timer for main screen
+		mainScreenTimer = 0;
 
 		switch( ch )
 		{
 			case IDK_SELECT:			
-			taskENTER_CRITICAL(); //////////////////////////////////
-			ints[IDD_LASTKEY] = ch;                             ////
-			taskEXIT_CRITICAL();  //////////////////////////////////
 			// send message to vLcdHandler
-			message.data      = 0; // the display number
 			message.idMessage = IDM_UPDATE_DISPLAY;
 			xQueueSend( xDisplay, (void*)&message,0);
 			break;
 			
 			case IDK_DOWN: case IDK_UP:
-			taskENTER_CRITICAL(); //////////////////////////////////
-			ints[IDD_LASTKEY] = ch;                             ////
-			taskEXIT_CRITICAL();  //////////////////////////////////
-			message.data      = 0;
-			message.idMessage = IDM_DISPLAY_MINMAX;
+			if (LastScreen == IDM_UPDATE_DISPLAY || LastScreen == IDM_DISPLAY_UPDATE_DATE || LastScreen == IDM_DISPLAY_UPDATE_TIME)
+			{
+				if (ch == IDK_UP)
+				{
+					message.idMessage = IDM_DISPLAY_UPDATE_TIME;
+				}
+				else if (ch == IDK_DOWN)
+				{
+					message.idMessage = IDM_DISPLAY_UPDATE_DATE;
+				}
+			}
+			else
+			{
+				message.idMessage = IDM_DISPLAY_MINMAX;
+			}
 			xQueueSend( xDisplay, (void*)&message,0);
 			break;
 			
 			case IDK_RIGHT: case IDK_LEFT:
-			taskENTER_CRITICAL(); //////////////////////////////////
-			ints[IDD_LASTKEY] = ch;                             ////
-			taskEXIT_CRITICAL();  //////////////////////////////////
-			message.data      = 0;
-			//message.idMessage = IDM_DISPLAY_HISTORY;
-			message.idMessage = IDM_DISPLAY_TIME;
+			message.idMessage = IDM_DISPLAY_AVERAGE;
 			xQueueSend( xDisplay, (void*)&message,0);
 			break;
 			
@@ -323,7 +204,7 @@ void OwnGets(char *pText)
 
 static void vTerminal( void *pvParameters )
 {
-	static char  line[80] = {0};
+	//static char  line[80] = {0};
 
 	( void ) pvParameters; /* Just to stop compiler warnings. */
 
@@ -343,21 +224,43 @@ static void vTerminal( void *pvParameters )
 
 static void vClock( void *pvParameters )
 {
+	static DISPLAY_MESSAGE message;
 	( void ) pvParameters; // Just to stop compiler warnings.
 
 	vSemaphoreCreateBinary( xClock );
 
 	StartTimer(125); // = for every 8 ms interrupt 8*125 = 1000ms = 1s
 	
+	// prepare message for vLcdHandler
+	message.data      = 0;
+	message.idMessage = IDM_DISPLAY_TIME;
+	
+	// default data for date
+	intsTime[ IDD_DAY ]		= 14;
+	intsTime[ IDD_MONTH ]	= 12;
+	intsTime[ IDD_YEAR ]	= 2020;
+	
 	for( ;; )
 	{
-		xSemaphoreTake( xClock, portMAX_DELAY ); // odotetaan tietoa keskeytyksestä
-
+		xSemaphoreTake( xClock, portMAX_DELAY ); // wait until interrupt
+		
 		taskENTER_CRITICAL(); /////////////////////////////////////////
 		intsTime[ IDD_HOUR ]   =  secondsFromMidNight / 3600L;         ////
 		intsTime[ IDD_MINUTES ]= (secondsFromMidNight % 3600L) / 60L ; ////
 		intsTime[ IDD_SECONDS ]=  secondsFromMidNight % 60L;           ////
 		taskEXIT_CRITICAL(); //////////////////////////////////////////
+		
+		// wait for ScreenWaitTime seconds to show the main screen
+		if (mainScreenTimer >= ScreenWaitTime)
+		{
+			xQueueSend( xDisplay, (void*)&message,0);
+		}
+		else
+		{
+			// add to the timer
+			mainScreenTimer++;	
+		}
+		
 	} // task for end
 } // task end
 
