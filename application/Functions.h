@@ -43,7 +43,6 @@ void ShowTime(void)
 {
 	char  szVariable[8];  // variable value will be printed here
 
-	lcd_gotoxy(0,0);
 	// hours
 	if( intsTime[IDD_HOUR] < 10)
 	lcd_putc('0');
@@ -75,26 +74,45 @@ void ShowTimeHoursAndMinutesAndDate(void)
 
 	//lcd_gotoxy(0,0);
 	// hours
-	//if( intsTime[IDD_HOUR] < 10)
-	//lcd_putc('0');
-	//itoa(intsTime[IDD_HOUR],szVariable,10);
-	//lcd_puts(szVariable);
-	//lcd_putc(':');
+	if( intsTime[IDD_HOUR] < 10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_HOUR],szVariable,10);
+	lcd_puts(szVariable);
+	lcd_putc(':');
 	// minutes
 	if( intsTime[IDD_MINUTES] < 10)
 	lcd_putc('0');
 	itoa(intsTime[IDD_MINUTES],szVariable,10);
 	lcd_puts(szVariable);
-	//lcd_putc(' ');
-	//////////////////////////////////////////////////// delete later on
-	// seconds
-	lcd_putc(':');
-	if( intsTime[IDD_SECONDS] < 10)
-	lcd_putc('0');
-	itoa(intsTime[IDD_SECONDS],szVariable,10);
-	lcd_puts(szVariable);
 	lcd_putc(' ');
-	//////////////////////////////////////////////////// delete later on
+	// day
+	if(intsTime[IDD_DAY]<10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_DAY],szVariable,10);
+	lcd_puts(szVariable);
+	lcd_putc('.');
+	// month
+	if(intsTime[IDD_MONTH]<10)
+	lcd_putc('0');
+	itoa(intsTime[IDD_MONTH],szVariable,10);
+	lcd_puts(szVariable);
+	lcd_putc('.');
+	// year
+	itoa(intsTime[IDD_YEAR],szVariable,10);
+	lcd_puts(szVariable);
+	
+}
+
+////////////////////////////////////////////////////////////////
+//
+// ShowDate will print the date
+//
+////////////////////////////////////////////////////////////////
+
+void ShowDate(void)
+{
+	char  szVariable[8];  // variable value will be printed here
+
 	// day
 	if(intsTime[IDD_DAY]<10)
 	lcd_putc('0');
@@ -146,14 +164,29 @@ void DisplayWrite(char *text)
 				itoa(ints[i],szVariable,10);                        //// // itoa transfers int to string inside the szVariable array
 				taskEXIT_CRITICAL();  //////////////////////////////////
 				// todo: fix the comma problem on the temperature...
-				szVariable[sizeof(szVariable)] = szVariable[sizeof(szVariable)-1];
-				szVariable[sizeof(szVariable)-1] = ',';
 				skipVariablePrint = false;
 				break;
 				
-				case 't':
+				// case: now
+				case 'n':
 				taskENTER_CRITICAL(); //////////////////////////////////
 				ShowTimeHoursAndMinutesAndDate();				////////
+				taskEXIT_CRITICAL();  //////////////////////////////////
+				skipVariablePrint = true;
+				break;
+				
+				// case: date
+				case 'd':
+				taskENTER_CRITICAL(); //////////////////////////////////
+				ShowDate();										////////
+				taskEXIT_CRITICAL();  //////////////////////////////////
+				skipVariablePrint = true;
+				break;
+				
+				// case: time
+				case 't':
+				taskENTER_CRITICAL(); //////////////////////////////////
+				ShowTime();										////////
 				taskEXIT_CRITICAL();  //////////////////////////////////
 				skipVariablePrint = true;
 				break;
@@ -164,6 +197,12 @@ void DisplayWrite(char *text)
 				pChVariable = szVariable;
 				while(*pChVariable != 0)
 				{
+					pChVariable++;
+					if(*pChVariable == 0)
+					{
+						lcd_putc('.');
+					}
+					pChVariable--;
 					lcd_putc(*pChVariable); // print the character
 					pChVariable++;			// next character
 				}

@@ -86,16 +86,16 @@ static void vLcdHandler( void *pvParameters )
 			break;
 			
 			case IDM_DISPLAY_UPDATE_DATE:
-			DisplayWrite("Update Date");
+			DisplayWrite("Update Date\n%d");
 			break;
 			
 			case IDM_DISPLAY_UPDATE_TIME:
-			DisplayWrite("Update Time");
+			DisplayWrite("Update Time\n%t");
 			break;
 			
 			case IDM_DISPLAY_TIME:
 			// display time, date and temperature
-			DisplayWrite("%t\n%i02 C");
+			DisplayWrite("%n\n%i02 C");
 			break;
 			
 			default:
@@ -122,28 +122,37 @@ static void vKeyPadHandler( void *pvParameters )
 
 	for( ;; )
 	{
-		do 
+		// wait for half a second !! for stability
+		const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+		vTaskDelay(xDelay);
+
+		do
 		{
 			xSemaphoreTake( xADC, portMAX_DELAY );
 			ch =GetKey();vTaskDelay(1);
 			xSemaphoreGive( xADC );
 
 		}while (ch == NO_KEY);
+			
 		
 		// reset timer for main screen
 		mainScreenTimer = 0;
 
 		switch( ch )
 		{
+			// if select button is pressed			
 			case IDK_SELECT:			
 			// send message to vLcdHandler
 			message.idMessage = IDM_UPDATE_DISPLAY;
 			xQueueSend( xDisplay, (void*)&message,0);
 			break;
 			
+			// if up or down is pressed
 			case IDK_DOWN: case IDK_UP:
-			if (LastScreen == IDM_UPDATE_DISPLAY || LastScreen == IDM_DISPLAY_UPDATE_DATE || LastScreen == IDM_DISPLAY_UPDATE_TIME)
+			// if the last screen was Update Display
+			if (LastScreen == IDM_UPDATE_DISPLAY)
 			{
+				// up and down buttons have different function
 				if (ch == IDK_UP)
 				{
 					message.idMessage = IDM_DISPLAY_UPDATE_TIME;
@@ -153,16 +162,23 @@ static void vKeyPadHandler( void *pvParameters )
 					message.idMessage = IDM_DISPLAY_UPDATE_DATE;
 				}
 			}
-			else
+			// otherwise it will show min/max screen - if it's not any of the updating screens
+			else if(LastScreen != IDM_DISPLAY_UPDATE_DATE && LastScreen != IDM_DISPLAY_UPDATE_TIME)
 			{
 				message.idMessage = IDM_DISPLAY_MINMAX;
 			}
 			xQueueSend( xDisplay, (void*)&message,0);
 			break;
 			
+			// in case right or left is pressed
 			case IDK_RIGHT: case IDK_LEFT:
-			message.idMessage = IDM_DISPLAY_AVERAGE;
-			xQueueSend( xDisplay, (void*)&message,0);
+			// if it's not the updating screens
+			if (LastScreen != IDM_DISPLAY_UPDATE_DATE && LastScreen != IDM_DISPLAY_UPDATE_TIME)
+			{
+				// show average
+				message.idMessage = IDM_DISPLAY_AVERAGE;
+				xQueueSend( xDisplay, (void*)&message,0);
+			}
 			break;
 			
 			default:
@@ -198,21 +214,29 @@ void OwnGets(char *pText)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// vTerminal will print data to the Serial, programs like PuTTy can be used to communicate with the micro controller
+// vTerminal will print data to the Serial, programs like PuTTy can be used to communicate with the micro controller. Now it prints 10x temperature every second
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void vTerminal( void *pvParameters )
 {
-	//static char  line[80] = {0};
+	char szVariable [8];
+	unsigned secondTimer=0;
+	// delay for 1000 ms
+	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
 
 	( void ) pvParameters; /* Just to stop compiler warnings. */
 
-	xSerialxPrintf(&xSerialPort,"\r\nArduino running..\r\n");
+	//xSerialxPrintf(&xSerialPort,"\r\nArduino running..\r\n");
 	
 	for( ;; )
 	{
-		// todo
+		// print temperature to Serial every one second
+		itoa(ints[IDD_TEMPERATURE],szVariable,10);
+		xSerialxPrintf(&xSerialPort, szVariable);
+		xSerialxPrintf(&xSerialPort, "\n\r");
+		vTaskDelay( xDelay );
+		
 	} // task for end
 } // task end
 
@@ -255,11 +279,8 @@ static void vClock( void *pvParameters )
 		{
 			xQueueSend( xDisplay, (void*)&message,0);
 		}
-		else
-		{
-			// add to the timer
-			mainScreenTimer++;	
-		}
+		// add to the timer
+		mainScreenTimer++;	
 		
 	} // task for end
 } // task end
