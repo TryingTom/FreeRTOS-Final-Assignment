@@ -73,32 +73,39 @@ static void vLcdHandler( void *pvParameters )
 		switch( message.idMessage)
 		{
 			// check the what %i01 means in above ints in GlobalVariables.h, %i01 = IDD_LASTKEY
+			
 			case IDM_UPDATE_DISPLAY:
+			// prints instructions to the user
 			DisplayWrite("Up  =Set Time\nDown=Set Date");
 			break;
 			
 			case IDM_DISPLAY_MINMAX:
+			// prints maximum temperature and minimum temperature
 			DisplayWrite("Max: %i03 C\nMin: %i04 C");
 			break;
 			
 			case IDM_DISPLAY_AVERAGE:
+			// prints average screen
 			DisplayWrite("Average Display");
 			break;
 			
 			case IDM_DISPLAY_UPDATE_DATE:
-			DisplayWrite("Update Date\n%d");
+			// prints date and allows user to modify data
+			DisplayWrite("Set Date\n%d");
 			break;
 			
 			case IDM_DISPLAY_UPDATE_TIME:
-			DisplayWrite("Update Time\n%t");
+			// prints time and allows user to modify data
+			DisplayWrite("Set Time\n%t");
 			break;
 			
-			case IDM_DISPLAY_TIME:
+			case IDM_DISPLAY_MAIN:
 			// display time, date and temperature
 			DisplayWrite("%n\n%i02 C");
 			break;
 			
 			default:
+			// prints an E to show error
 			lcd_putc('E');
 			break; // error messages
 		}
@@ -114,7 +121,7 @@ static void vLcdHandler( void *pvParameters )
 static void vKeyPadHandler( void *pvParameters )
 {
 	static unsigned char ch = 0;
-	static DISPLAY_MESSAGE message;
+	static DISPLAY_MESSAGE message;	
 	
 	message.data = 0; // the display number
 	
@@ -140,9 +147,9 @@ static void vKeyPadHandler( void *pvParameters )
 
 		switch( ch )
 		{
-			// if select button is pressed			
-			case IDK_SELECT:			
 			// send message to vLcdHandler
+			// if select button is pressed			
+			case IDK_SELECT:
 			message.idMessage = IDM_UPDATE_DISPLAY;
 			xQueueSend( xDisplay, (void*)&message,0);
 			break;
@@ -155,11 +162,17 @@ static void vKeyPadHandler( void *pvParameters )
 				// up and down buttons have different function
 				if (ch == IDK_UP)
 				{
-					message.idMessage = IDM_DISPLAY_UPDATE_TIME;
+					// change time and go back to main screen
+					ChangeTime();
+					vTaskDelay(20); // wait for 1 second for the time to set
+					message.idMessage = IDM_DISPLAY_MAIN;
 				}
 				else if (ch == IDK_DOWN)
 				{
-					message.idMessage = IDM_DISPLAY_UPDATE_DATE;
+					// change date and go back to main screen
+					ChangeDate();
+					vTaskDelay(20); // wait for 1 second for the time to set
+					message.idMessage = IDM_DISPLAY_MAIN;
 				}
 			}
 			// otherwise it will show min/max screen - if it's not any of the updating screens
@@ -221,17 +234,14 @@ void OwnGets(char *pText)
 static void vTerminal( void *pvParameters )
 {
 	char szVariable [8];
-	unsigned secondTimer=0;
 	// delay for 1000 ms
 	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
 
 	( void ) pvParameters; /* Just to stop compiler warnings. */
-
-	//xSerialxPrintf(&xSerialPort,"\r\nArduino running..\r\n");
 	
 	for( ;; )
 	{
-		// print temperature to Serial every one second
+		// print temperature to Serial every second
 		itoa(ints[IDD_TEMPERATURE],szVariable,10);
 		xSerialxPrintf(&xSerialPort, szVariable);
 		xSerialxPrintf(&xSerialPort, "\n\r");
@@ -257,7 +267,7 @@ static void vClock( void *pvParameters )
 	
 	// prepare message for vLcdHandler
 	message.data      = 0;
-	message.idMessage = IDM_DISPLAY_TIME;
+	message.idMessage = IDM_DISPLAY_MAIN;
 	
 	// default data for date
 	intsTime[ IDD_DAY ]		= 14;
@@ -268,19 +278,45 @@ static void vClock( void *pvParameters )
 	{
 		xSemaphoreTake( xClock, portMAX_DELAY ); // wait until interrupt
 		
-		taskENTER_CRITICAL(); /////////////////////////////////////////
+		taskENTER_CRITICAL(); /////////////////////////////////////////////
 		intsTime[ IDD_HOUR ]   =  secondsFromMidNight / 3600L;         ////
 		intsTime[ IDD_MINUTES ]= (secondsFromMidNight % 3600L) / 60L ; ////
 		intsTime[ IDD_SECONDS ]=  secondsFromMidNight % 60L;           ////
-		taskEXIT_CRITICAL(); //////////////////////////////////////////
+		taskEXIT_CRITICAL(); //////////////////////////////////////////////
+		
+		// when a whole day has gone by
+		if(secondsFromMidNight > (24*3600L))
+		{
+			secondsFromMidNight = 0;
+			intsTime[ IDD_DAY ]++;
+		}
+		// if the whole month has gone by - check how many days in current month
+		if (intsTime[ IDD_DAY ] > HowManyDaysInMonth(intsTime[ IDD_MONTH ], intsTime[IDD_YEAR]))
+		{
+			intsTime[ IDD_DAY ] = 1;
+			intsTime[ IDD_MONTH ]++;
+		}
+		// if the whole year has gone by
+		if (intsTime[ IDD_MONTH ] > 12)
+		{
+			intsTime[ IDD_MONTH ] = 1;
+			intsTime[ IDD_YEAR ]++;
+		}
+		
 		
 		// wait for ScreenWaitTime seconds to show the main screen
 		if (mainScreenTimer >= ScreenWaitTime)
 		{
 			xQueueSend( xDisplay, (void*)&message,0);
 		}
-		// add to the timer
-		mainScreenTimer++;	
+		
+		// if the timer isn't stopped
+		if (!mainScreenTimerStopped)
+		{
+			// add to the timer
+			mainScreenTimer++;	
+		}
+		
 		
 	} // task for end
 } // task end

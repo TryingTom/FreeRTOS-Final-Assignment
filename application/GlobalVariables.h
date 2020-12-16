@@ -6,7 +6,7 @@
 #define IDM_DISPLAY_MINMAX		2
 #define IDM_DISPLAY_AVERAGE		3
 #define IDM_DISPLAY_HISTORY		4
-#define IDM_DISPLAY_TIME		5
+#define IDM_DISPLAY_MAIN		5
 #define IDM_DISPLAY_UPDATE_TIME	6
 #define IDM_DISPLAY_UPDATE_DATE 7
 // structure of the message
@@ -15,6 +15,23 @@ typedef struct
 	char idMessage; // viestin tunniste
 	char data;      // dataa
 }DISPLAY_MESSAGE;
+
+// different months
+typedef enum
+{
+	eJanuary,
+	eFebruary,
+	eMarch,
+	eApril,
+	eMay,
+	eJune,
+	eJuly,
+	eAugust,
+	eSeptember,
+	eOctober,
+	eNovember,
+	eDecember
+} eMonths;
 
 
 // -- introducing the tasks ---------------
@@ -29,10 +46,11 @@ static void vTerminal( void *pvParameters );
 #define comBUFFER_LEN				(50)
 
 //-- tasks global variable -------------------------------
-unsigned  secondsFromMidNight = 0;
-unsigned  mainScreenTimer = 5;	// initialize with >3 so the main screen shows immediately
-unsigned LastScreen = 0;			// last screen so the screen isn't cleared as much
-#define ScreenWaitTime 3		// how many seconds until the program goes back to the main screen
+unsigned long secondsFromMidNight = 0;	// seconds long, because otherwise there's not enough 
+unsigned  mainScreenTimer = 5;			// initialize with >3 so the main screen shows immediately
+unsigned  LastScreen = 0;				// last screen so the screen isn't cleared as much
+bool mainScreenTimerStopped = false;	// stop main screen timer so the user can set time and date in peace
+#define ScreenWaitTime 3				// how many seconds until the program goes back to the main screen
 #define INTS_MAX_TIME 6
 #define INTS_MAX 5
 
@@ -68,5 +86,9 @@ void ShowTime(void);
 void ShowTimeHoursAndMinutesAndDate(void);
 void OwnGets(char *pText);
 void DisplayWrite(char *text);
+int  ReadKeyPadWithLCD(char *szPrompt, int nMax);
+void ChangeTime (void);
+void ChangeDate(void);
+int HowManyDaysInMonth();
 
 #endif /* GLOBALVARIABLES_H_ */

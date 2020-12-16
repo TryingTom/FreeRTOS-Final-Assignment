@@ -23,13 +23,17 @@ There are following screens implemented:
 	
 There will be also USB connection to another program on the computer, which shows user interface for the different temperatures according to the time.
 
+## Wiring:
+
+![alt text](https://github.com/TryingTom/FreeRTOS-Final-Assignment/blob/main/Wiring.png?raw=true)
+
 ## Todo:
 - [x] Fixing screen texts
-- [ ] Implement change time
+- [x] Implement change time
 - [x] Implement display date
-- [ ] Implement change date
+- [x] Implement change date
 - [ ] Implement calculate average
 - [x] Fix buttons so they have less error
 
 - [x] UI for the the data (The program sends data to Serial, and the user can use whatever UI - like Arduino IDE's plotter.)
-- [ ] Picture of the wiring
+- [x] Picture of the wiring

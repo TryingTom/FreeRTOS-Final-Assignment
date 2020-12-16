@@ -72,7 +72,6 @@ void ShowTimeHoursAndMinutesAndDate(void)
 {
 	char  szVariable[8];  // variable value will be printed here
 
-	//lcd_gotoxy(0,0);
 	// hours
 	if( intsTime[IDD_HOUR] < 10)
 	lcd_putc('0');
@@ -131,13 +130,19 @@ void ShowDate(void)
 	
 }
 
+////////////////////////////////////////////////////////////////
+//
+// DisplayWrite will print the given text onto the display
+//
+////////////////////////////////////////////////////////////////
+
 void DisplayWrite(char *text)
 {
 	char *pDisplay[] = {text};
 	volatile  char *pChDisplay =0,  // pointer for *pDisplay, shows the current character
-	*pChVariable=0; // pointer which is connected to variable value printing
+	*pChVariable=0;					// pointer which is connected to variable value printing
 	int             i;
-	char            szVariable[8]; // variable value is printed here
+	char            szVariable[8];	// variable value is printed here
 	bool skipVariablePrint = false;
 	
 	xSemaphoreTake( xDisplaySemaphore, portMAX_DELAY ); // Take Semaphore for uninterrupted printing
@@ -163,7 +168,6 @@ void DisplayWrite(char *text)
 				taskENTER_CRITICAL(); //////////////////////////////////
 				itoa(ints[i],szVariable,10);                        //// // itoa transfers int to string inside the szVariable array
 				taskEXIT_CRITICAL();  //////////////////////////////////
-				// todo: fix the comma problem on the temperature...
 				skipVariablePrint = false;
 				break;
 				
@@ -218,6 +222,184 @@ void DisplayWrite(char *text)
 		pChDisplay++;			// next character
 	}
 	xSemaphoreGive( xDisplaySemaphore); // give the semaphore
+}
+
+////////////////////////////////////////////////////////////////
+//
+// ReadKeyPadWithLCD allows the user to go between 0 and maximum value given, then it prints the value on LCD screen.
+//
+////////////////////////////////////////////////////////////////
+
+int  ReadKeyPadWithLCD(char *szPrompt, int nMax)
+{
+	char text[10]={0};
+	int nValue=0;
+	int key;
+	char *p = szPrompt;
+
+	// show prompt
+	lcd_clrscr();
+	while(*p )
+	{
+		if(*p == '\n')
+		lcd_gotoxy(0,1);
+		else
+		lcd_putc(*p);
+		p++;
+	}
+	do
+	{
+		while( (key = GetKey()) == NO_KEY); // wait for press
+		if (key == IDK_UP)
+		{
+			if(nValue < nMax)
+			nValue++;
+			// if the value raises to the maximum value, it goes back to zero, allowing looping the values
+			else if (nValue == nMax)
+			nValue = 0;
+			
+		}
+		else if(key == IDK_DOWN)
+		{
+			if(nValue)
+			nValue--;
+			// if the value lowers to the minimum value, it goes back to max, allowing looping the values
+			else if(!nValue)
+			nValue = nMax;
+		}
+		else if(key == IDK_SELECT)
+		{
+			while( (key = GetKey()) != NO_KEY); // wait for the button to be ready
+			return nValue;
+		}
+		// print the number
+		itoa(nValue,text,10);
+		// add 0 if less than 10
+		if (nValue<10)
+		{
+			lcd_gotoxy(10,1);
+			lcd_putc('0');
+			lcd_gotoxy(11,1);	
+		}
+		else
+		{
+			lcd_gotoxy(10,1);
+		}
+		
+		lcd_puts(text);
+		
+		while( (key = GetKey()) != NO_KEY); // wait for button to be ready
+
+	}
+	while(1);
+
+}
+
+////////////////////////////////////////////////////////////////
+//
+// ChangeTime uses the ReadKeyPadWithLCD() function to write text and get the returned time, putting it to the database.
+//
+////////////////////////////////////////////////////////////////
+
+void ChangeTime (void)
+{
+	unsigned int hour, minutes,seconds;
+	
+	// stop the timer so the user has time to set the time
+	mainScreenTimerStopped = true;
+	xSemaphoreTake( xADC, portMAX_DELAY ); // take semaphore
+	hour = ReadKeyPadWithLCD("TIME SET\nHours? ",23);
+	vTaskDelay(20);
+	minutes = ReadKeyPadWithLCD("TIME SET\nMinutes? ",59);
+	vTaskDelay(20);
+	seconds = ReadKeyPadWithLCD("TIME SET\nSeconds? ",59);
+	vTaskDelay(20);
+	
+	// set time
+	secondsFromMidNight = hour*3600L+minutes*60L+seconds;
+	intsTime[ IDD_HOUR ]	= hour;
+	intsTime[ IDD_MINUTES ]	= minutes;
+	intsTime[ IDD_SECONDS ]	= seconds;
+	
+	vTaskDelay(20); // wait 1 second
+	// allow the timer to run again
+	mainScreenTimerStopped = false;
+	xSemaphoreGive( xADC ); // give semaphore
+}
+
+////////////////////////////////////////////////////////////////
+//
+// ChangeDate uses the ReadKeyPadWithLCD() function to write text and get the returned date, putting it to the database.
+//
+////////////////////////////////////////////////////////////////
+
+void ChangeDate(void)
+{
+	unsigned int year, month, day;
+	
+	// stop the timer so the user has time to set the time
+	mainScreenTimerStopped = true;
+	xSemaphoreTake( xADC, portMAX_DELAY ); // take semaphore
+	year = ReadKeyPadWithLCD("DATE SET\nYear?   2000", 99);
+	vTaskDelay(20);
+	month = ReadKeyPadWithLCD("DATE SET\nMonth? ", 12);
+	if (month == 0)
+	{
+		month = 1;
+	}
+	vTaskDelay(20);
+	day = ReadKeyPadWithLCD("DATE SET\nDay? ", HowManyDaysInMonth(month, year));
+	if (day == 0)
+	{
+		day = 1;
+	}
+	vTaskDelay(20);
+	
+	// set date
+	intsTime[ IDD_DAY ]		= day;
+	intsTime[ IDD_MONTH ]	= month;
+	intsTime[ IDD_YEAR ]	= 2000 + year;
+	
+	vTaskDelay(20); // wait 1 second
+	// allow the timer to run again
+	mainScreenTimerStopped = false;
+	xSemaphoreGive( xADC ); //give semaphore
+}
+
+////////////////////////////////////////////////////////////////
+//
+// HowManyDaysInMonth returns how many days are in a given month - it takes into consideration also the leap years.
+//
+////////////////////////////////////////////////////////////////
+
+int HowManyDaysInMonth(int month, int year)
+{
+	int days = 0;
+	int monthNumber = month - 1; // since enum starts from index 0
+	
+	if (monthNumber == eApril || monthNumber == eJune || monthNumber == eSeptember || monthNumber == eNovember)
+	{
+		days = 30;
+	}
+	// if February 
+	else if (monthNumber == eFebruary)
+	{
+		// if the year is a leap year
+		if (!(year % 4))
+		{
+			days = 29;
+		}
+		else
+		{
+			days = 28;
+		}
+	}
+	// other months
+	else{
+		days = 31;
+	}
+	
+	return days;
 }
 
 #endif /* FUNCTIONS_H_ */
