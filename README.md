@@ -13,7 +13,7 @@ Connect GND to ground, VDD to 5 V and DQ to A7 pin. Also connect the DQ pin to V
 The used LCD screen has 5 buttons, four directional and 1 select. 
 
 The main screen shows the time, date and temperature.
-If up or down is pressed, the user can move to min and max screen. Left and right buttons will show average. The main screen will show again if nothing is pressed for 3 seconds.
+If up or down is pressed, the user can move to min and max screen. Left and right buttons will show average. Pressing select button will allow user to set time or date. The main screen will show again if nothing is pressed for 3 seconds.
 There are following screens implemented:
  - screen will show minimum and maximum values and their time
  - screen will show average by the hour, showing also the max and minimum for that hour
